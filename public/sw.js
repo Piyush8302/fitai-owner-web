@@ -11,13 +11,17 @@ self.addEventListener('push', (event) => {
     payload = { title: 'FitAI Owner', body: event.data ? event.data.text() : '' };
   }
   const title = payload.title || 'FitAI Owner';
+  // Member photo (Cloudinary URL or /api/gym/avatar/:id) — shown as the
+  // notification's icon (like the app's thumbnail) AND as the big picture
+  // on Android when expanded.
+  const photo = payload.image || (payload.data && payload.data.avatar) || null;
   const options = {
     body: payload.body || '',
-    icon: '/icon-192.png',
+    icon: photo || '/icon-192.png',
     badge: '/icon-192.png',
     data: payload.data || {},
   };
-  if (payload.image) options.image = payload.image;
+  if (photo) options.image = photo;
   event.waitUntil(self.registration.showNotification(title, options));
 });
 

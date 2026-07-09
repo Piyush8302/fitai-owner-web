@@ -3,6 +3,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { api, getToken, getUser, clearAuth, type AuthUser, type Gym } from './api';
+import { syncPushSilently } from './push';
 
 type AppState = {
   user: AuthUser | null;
@@ -67,6 +68,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }
     setUser(u);
     Promise.all([refreshGyms(), refreshUnread()]).finally(() => setReady(true));
+    // Keep the push subscription bound to this user on every open (Android fix).
+    syncPushSilently();
   }, [router, refreshGyms, refreshUnread]);
 
   const gym = useMemo(() => gyms.find((g) => g._id === gymId) || null, [gyms, gymId]);

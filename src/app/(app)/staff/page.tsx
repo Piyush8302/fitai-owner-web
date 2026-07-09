@@ -139,11 +139,12 @@ function AddStaffForm({ gymId, onDone, onError }: { gymId: string; onDone: () =>
       <input className="input" placeholder="Name" value={name} onChange={(e) => setName(e.target.value)} />
       <input
         className="input"
-        placeholder="Phone"
+        placeholder="Phone (10 digits)"
         type="tel"
         inputMode="numeric"
         value={phone}
-        onChange={(e) => setPhone(e.target.value)}
+        onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
+        maxLength={10}
       />
       <input className="input" placeholder="Role (e.g. Trainer, Receptionist)" value={role} onChange={(e) => setRole(e.target.value)} />
       <input
@@ -160,7 +161,7 @@ function AddStaffForm({ gymId, onDone, onError }: { gymId: string; onDone: () =>
         onClick={async () => {
           const cleanPhone = phone.replace(/\D/g, '');
           if (!name.trim()) return onError('Enter staff name');
-          if (cleanPhone.length < 10) return onError('Enter a 10-digit phone number');
+          if (cleanPhone.length !== 10) return onError('Enter a valid 10-digit phone number');
           setBusy(true);
           const res = await api.post('/api/gym/staff', {
             gymId,

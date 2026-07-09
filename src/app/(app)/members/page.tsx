@@ -205,7 +205,7 @@ function AddMemberModal({
   const submit = async () => {
     const cleanPhone = phone.replace(/\D/g, '');
     if (!name.trim()) return onError('Enter member name');
-    if (cleanPhone.length < 10) return onError('Enter a 10-digit phone number');
+    if (cleanPhone.length !== 10) return onError('Enter a valid 10-digit phone number');
     setBusy(true);
     const res = await api.post('/api/gym/members', {
       gymId,
@@ -235,11 +235,12 @@ function AddMemberModal({
         <input className="input" placeholder="Name" value={name} onChange={(e) => setName(e.target.value)} />
         <input
           className="input"
-          placeholder="Phone"
+          placeholder="Phone (10 digits)"
           type="tel"
           inputMode="numeric"
           value={phone}
-          onChange={(e) => setPhone(e.target.value)}
+          onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
+          maxLength={10}
         />
         <div className="no-scrollbar flex gap-2 overflow-x-auto">
           {PLANS.map((p) => (
