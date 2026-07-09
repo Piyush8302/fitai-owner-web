@@ -46,21 +46,21 @@ export async function registerSW(): Promise<ServiceWorkerRegistration | null> {
 export async function enablePush(): Promise<{ ok: boolean; message: string }> {
   if (!pushSupported()) {
     if (isIOS() && !isStandalone())
-      return { ok: false, message: 'iPhone pe pehle "Add to Home Screen" karo, phir installed app me notifications on karo.' };
-    return { ok: false, message: 'Is browser me push notifications supported nahi hain.' };
+      return { ok: false, message: 'On iPhone, first "Add to Home Screen", then enable notifications inside the installed app.' };
+    return { ok: false, message: 'Push notifications are not supported in this browser.' };
   }
   if (!getToken()) return { ok: false, message: 'Login required' };
 
   const perm = await Notification.requestPermission();
-  if (perm !== 'granted') return { ok: false, message: 'Notification permission deni hogi (browser settings me allow karo).' };
+  if (perm !== 'granted') return { ok: false, message: 'Notification permission is required (allow it in browser settings).' };
 
   const reg = (await navigator.serviceWorker.getRegistration()) || (await registerSW());
-  if (!reg) return { ok: false, message: 'Service worker register nahi hua.' };
+  if (!reg) return { ok: false, message: 'Service worker could not be registered.' };
   await navigator.serviceWorker.ready;
 
   const keyRes = await fetch(`${API_BASE_URL}/api/notifications/web-push/key`).then((r) => r.json()).catch(() => null);
   const publicKey: string | undefined = keyRes?.key;
-  if (!publicKey) return { ok: false, message: 'Server pe web-push keys configured nahi hain (Render env).' };
+  if (!publicKey) return { ok: false, message: 'Web-push keys are not configured on the server (Render env).' };
 
   let sub = await reg.pushManager.getSubscription();
   if (!sub) {
@@ -70,6 +70,6 @@ export async function enablePush(): Promise<{ ok: boolean; message: string }> {
     });
   }
   const res = await api.post('/api/notifications/web-push/subscribe', { subscription: sub.toJSON() });
-  if (!res.success) return { ok: false, message: res.message || 'Subscribe fail ho gaya' };
-  return { ok: true, message: 'Notifications on! 🔔' };
+  if (!res.success) return { ok: false, message: res.message || 'Subscription failed' };
+  return { ok: true, message: 'Notifications enabled! 🔔' };
 }

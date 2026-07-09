@@ -7,6 +7,7 @@ import { api } from '@/lib/api';
 import { useApp } from '@/lib/store';
 import GymSwitcher from '@/components/GymSwitcher';
 import { Avatar, Loading, Empty, Modal, Toast, StatusBadge } from '@/components/ui';
+import PhotoPicker from '@/components/PhotoPicker';
 
 export type StaffRow = {
   _id: string;
@@ -51,8 +52,8 @@ export default function StaffPage() {
 
   const markPresent = async (staffId: string) => {
     const res = await api.post('/api/gym/staff/attendance', { gymId, staffId });
-    if (!res.success) return show(res.message || 'Fail');
-    show((res as { data?: { duplicate?: boolean } }).data?.duplicate ? 'Already present hai' : 'Present marked ✅', false);
+    if (!res.success) return show(res.message || 'Could not mark present');
+    show((res as { data?: { duplicate?: boolean } }).data?.duplicate ? 'Already marked present today' : 'Present marked ✅', false);
     load();
   };
 
@@ -76,7 +77,7 @@ export default function StaffPage() {
         {loading ? (
           <Loading />
         ) : rows.length === 0 ? (
-          <Empty text="Koi staff nahi. Add karo!" />
+          <Empty text="No staff yet. Add your first one!" />
         ) : (
           <div className="card divide-y divide-border">
             {rows.map((s) => (
@@ -130,9 +131,11 @@ function AddStaffForm({ gymId, onDone, onError }: { gymId: string; onDone: () =>
   const [phone, setPhone] = useState('');
   const [role, setRole] = useState('');
   const [salary, setSalary] = useState('');
+  const [avatar, setAvatar] = useState('');
   const [busy, setBusy] = useState(false);
   return (
     <div className="space-y-3">
+      <PhotoPicker value={avatar} name={name} onChange={setAvatar} />
       <input className="input" placeholder="Name" value={name} onChange={(e) => setName(e.target.value)} />
       <input
         className="input"
@@ -156,8 +159,8 @@ function AddStaffForm({ gymId, onDone, onError }: { gymId: string; onDone: () =>
         disabled={busy}
         onClick={async () => {
           const cleanPhone = phone.replace(/\D/g, '');
-          if (!name.trim()) return onError('Naam daalo');
-          if (cleanPhone.length < 10) return onError('10-digit phone daalo');
+          if (!name.trim()) return onError('Enter staff name');
+          if (cleanPhone.length < 10) return onError('Enter a 10-digit phone number');
           setBusy(true);
           const res = await api.post('/api/gym/staff', {
             gymId,
@@ -165,9 +168,10 @@ function AddStaffForm({ gymId, onDone, onError }: { gymId: string; onDone: () =>
             phone: cleanPhone,
             staffRole: role.trim() || undefined,
             salary: salary ? Number(salary) : undefined,
+            avatar: avatar || undefined,
           });
           setBusy(false);
-          if (!res.success) return onError(res.message || 'Add fail');
+          if (!res.success) return onError(res.message || 'Could not add staff');
           onDone();
         }}
       >

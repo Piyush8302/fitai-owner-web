@@ -21,14 +21,14 @@ type FullStaff = StaffRow & {
 };
 
 const PERMS: { key: keyof FullStaff; label: string }[] = [
-  { key: 'canMarkPresent', label: 'Attendance mark kare' },
-  { key: 'canAddMember', label: 'Member add kare' },
-  { key: 'canMarkPayment', label: 'Payment mark kare' },
-  { key: 'canManageStatus', label: 'Member status change kare' },
+  { key: 'canMarkPresent', label: 'Mark attendance' },
+  { key: 'canAddMember', label: 'Add members' },
+  { key: 'canMarkPayment', label: 'Mark payments' },
+  { key: 'canManageStatus', label: 'Change member status' },
   { key: 'canAccessCashbook', label: 'Cashbook access' },
   { key: 'canAccessReports', label: 'Reports access' },
-  { key: 'canEditGym', label: 'Gym edit kare' },
-  { key: 'canSetLocation', label: 'Gym location set kare' },
+  { key: 'canEditGym', label: 'Edit gym' },
+  { key: 'canSetLocation', label: 'Set gym location' },
 ];
 
 const STAFF_STATUSES = ['active', 'inactive', 'blocked', 'left'] as const;
@@ -73,13 +73,13 @@ function StaffDetailInner() {
 
   const update = async (patch: Record<string, unknown>, okMsg: string) => {
     const res = await api.put(`/api/gym/staff/${id}`, patch);
-    if (!res.success) return show(res.message || 'Update fail');
+    if (!res.success) return show(res.message || 'Update failed');
     show(okMsg, false);
     load();
   };
 
   if (loading) return <Loading full />;
-  if (!staff) return <Empty text="Staff nahi mila." />;
+  if (!staff) return <Empty text="Staff not found." />;
 
   return (
     <div>
@@ -124,7 +124,7 @@ function StaffDetailInner() {
               <button
                 key={s}
                 className={`chip capitalize ${(staff.staffStatus || 'active') === s ? 'chip-active' : ''}`}
-                onClick={() => update({ staffStatus: s }, `Staff ${s} ✅`)}
+                onClick={() => update({ staffStatus: s }, `Staff marked ${s} ✅`)}
               >
                 {s}
               </button>
@@ -132,13 +132,13 @@ function StaffDetailInner() {
           </div>
           {staff.staffStatus && staff.staffStatus !== 'active' && (
             <p className="mt-2 text-xs text-muted">
-              Non-active staff koi gym action nahi kar sakta. <StatusBadge status={staff.staffStatus} />
+              Non-active staff cannot perform gym actions. <StatusBadge status={staff.staffStatus} />
             </p>
           )}
         </section>
 
         <section className="card p-4">
-          <h2 className="mb-3 text-sm font-bold">Permissions (delete sirf owner ka right hai)</h2>
+          <h2 className="mb-3 text-sm font-bold">Permissions (delete stays owner-only)</h2>
           <div className="space-y-2.5">
             {PERMS.map((p) => {
               const on = !!staff[p.key];
@@ -164,7 +164,7 @@ function StaffDetailInner() {
         <section>
           <h2 className="mb-2 text-base font-bold">Attendance History</h2>
           {att.length === 0 ? (
-            <Empty text="Koi attendance record nahi." />
+            <Empty text="No attendance records yet." />
           ) : (
             <div className="card divide-y divide-border">
               {att.slice(0, 20).map((a) => (
@@ -180,9 +180,9 @@ function StaffDetailInner() {
         <button
           className="btn btn-danger"
           onClick={async () => {
-            if (!confirm(`${staff.name} ko staff se remove karna hai? Account normal user ban jayega.`)) return;
+            if (!confirm(`Remove ${staff.name} from staff? Their account becomes a normal user.`)) return;
             const res = await api.del(`/api/gym/staff/${id}`);
-            if (!res.success) return show(res.message || 'Remove fail');
+            if (!res.success) return show(res.message || 'Remove failed');
             router.replace('/staff');
           }}
         >

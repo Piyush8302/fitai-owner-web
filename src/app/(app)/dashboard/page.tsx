@@ -8,6 +8,7 @@ import { useApp } from '@/lib/store';
 import GymSwitcher from '@/components/GymSwitcher';
 import { Avatar, Loading, Empty } from '@/components/ui';
 import InstallHint from '@/components/InstallHint';
+import QrModal from '@/components/QrModal';
 
 type Stats = { totalMembers: number; todayFootfall: number; dueMembers: number; pendingFees: number; branches?: number };
 type AttRow = { _id: string; user?: { name?: string; phone?: string }; checkInAt: string; method: string };
@@ -18,10 +19,12 @@ const istDay = () => {
 };
 
 export default function DashboardPage() {
-  const { user, gymId, gym, unread } = useApp();
+  const { user, gymId, gym, gyms, unread } = useApp();
   const [stats, setStats] = useState<Stats | null>(null);
   const [today, setToday] = useState<AttRow[]>([]);
   const [loading, setLoading] = useState(true);
+  const [qrOpen, setQrOpen] = useState(false);
+  const qrGym = gym || gyms[0] || null;
 
   const load = useCallback(async () => {
     if (!gymId) return;
@@ -57,7 +60,7 @@ export default function DashboardPage() {
       <div className="grad-hero rounded-b-[28px] px-5 pb-6 pt-12 text-white safe-top">
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-xs text-white/80">Namaste 🙏</p>
+            <p className="text-xs text-white/80">Welcome back 👋</p>
             <h1 className="text-xl font-extrabold">{user?.name || 'Owner'}</h1>
           </div>
           <Link href="/notifications" className="relative rounded-full bg-white/20 p-2.5">
@@ -98,21 +101,21 @@ export default function DashboardPage() {
             </div>
             <span className="text-sm font-bold">Add Member</span>
           </Link>
-          <Link href="/more" className="card flex items-center gap-2.5 p-3.5">
+          <button className="card flex items-center gap-2.5 p-3.5 text-left" onClick={() => setQrOpen(true)}>
             <div className="rounded-xl bg-accent/10 p-2 text-accent">
               <ScanLine size={18} />
             </div>
             <span className="text-sm font-bold">Gym QR</span>
-          </Link>
+          </button>
         </div>
 
         {gymId !== 'all' && (
           <div className="mt-5">
-            <h2 className="mb-2 text-base font-bold">Aaj ke Check-ins {gym ? `— ${gym.name}` : ''}</h2>
+            <h2 className="mb-2 text-base font-bold">Today&apos;s Check-ins {gym ? `— ${gym.name}` : ''}</h2>
             {loading ? (
               <Loading />
             ) : today.length === 0 ? (
-              <Empty text="Aaj abhi tak koi check-in nahi hua." />
+              <Empty text="No check-ins yet today." />
             ) : (
               <div className="card divide-y divide-border">
                 {today.map((a) => (
@@ -130,6 +133,7 @@ export default function DashboardPage() {
           </div>
         )}
       </div>
+      {qrGym && <QrModal open={qrOpen} onClose={() => setQrOpen(false)} gym={qrGym} />}
     </div>
   );
 }

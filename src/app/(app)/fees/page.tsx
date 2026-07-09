@@ -95,7 +95,7 @@ export default function FeesPage() {
         {loading ? (
           <Loading />
         ) : filtered.length === 0 ? (
-          <Empty text="Is bucket me koi member nahi. 🎉" />
+          <Empty text="No members in this bucket. 🎉" />
         ) : (
           <div className="card divide-y divide-border">
             {filtered.map((m) => (
@@ -107,10 +107,10 @@ export default function FeesPage() {
                     Due {fmtDate(m.dueDate)}
                     {typeof m.daysDiff === 'number' &&
                       (m.daysDiff < 0
-                        ? ` · ${-m.daysDiff} din late`
+                        ? ` · ${-m.daysDiff} day${-m.daysDiff > 1 ? 's' : ''} late`
                         : m.daysDiff === 0
-                          ? ' · aaj'
-                          : ` · ${m.daysDiff} din baad`)}
+                          ? ' · today'
+                          : ` · in ${m.daysDiff} day${m.daysDiff > 1 ? 's' : ''}`)}
                   </p>
                 </div>
                 <div className="flex items-center gap-1">

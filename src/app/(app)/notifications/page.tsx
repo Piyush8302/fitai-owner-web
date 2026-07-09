@@ -20,7 +20,7 @@ type Notif = {
 const timeAgo = (d: string) => {
   const diff = Date.now() - new Date(d).getTime();
   const m = Math.floor(diff / 60000);
-  if (m < 1) return 'abhi';
+  if (m < 1) return 'now';
   if (m < 60) return `${m}m`;
   const h = Math.floor(m / 60);
   if (h < 24) return `${h}h`;
@@ -74,7 +74,7 @@ export default function NotificationsPage() {
         {loading ? (
           <Loading />
         ) : rows.length === 0 ? (
-          <Empty text="Koi notification nahi." />
+          <Empty text="No notifications yet." />
         ) : (
           <div className="card divide-y divide-border">
             {rows.map((n) => (

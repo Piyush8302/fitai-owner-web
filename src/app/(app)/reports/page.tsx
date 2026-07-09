@@ -86,7 +86,7 @@ export default function ReportsPage() {
         {loading ? (
           <Loading />
         ) : !report ? (
-          <Empty text="Report load nahi hui." />
+          <Empty text="Could not load the report." />
         ) : (
           <>
             <div className="mb-3 text-center">

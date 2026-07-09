@@ -2,10 +2,11 @@
 
 import { useCallback, useEffect, useState, Suspense } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
-import { ArrowLeft, CheckCircle2, IndianRupee, CalendarClock, Trash2, Phone } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, IndianRupee, CalendarClock, Trash2, Phone, Camera } from 'lucide-react';
 import { api, can, fmtDate, fmtMoney, fmtTime, PLANS, PLAN_LABEL, type MemberRow } from '@/lib/api';
 import { useApp } from '@/lib/store';
 import { Avatar, Modal, Loading, StatusBadge, DueBadge, Toast, Empty } from '@/components/ui';
+import PhotoPicker from '@/components/PhotoPicker';
 
 type Detail = {
   membership: MemberRow;
@@ -30,6 +31,7 @@ function MemberDetailInner() {
   const [payOpen, setPayOpen] = useState(false);
   const [dueOpen, setDueOpen] = useState(false);
   const [statusOpen, setStatusOpen] = useState(false);
+  const [photoOpen, setPhotoOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [toast, setToast] = useState<{ msg: string; error?: boolean }>({ msg: '' });
 
@@ -42,7 +44,7 @@ function MemberDetailInner() {
     if (!gymId || !id) return;
     const res = await api.get<Detail>(`/api/gym/${gymId}/member/${id}`);
     if (res.success && res.data) setD(res.data);
-    else show(res.message || 'Member load nahi hua');
+    else show(res.message || 'Could not load member');
     setLoading(false);
   }, [gymId, id]);
 
@@ -51,7 +53,7 @@ function MemberDetailInner() {
   }, [load]);
 
   if (loading) return <Loading full />;
-  if (!d) return <Empty text="Member nahi mila." />;
+  if (!d) return <Empty text="Member not found." />;
 
   const m = d.membership;
 
@@ -60,15 +62,15 @@ function MemberDetailInner() {
     setBusy(true);
     const res = await api.post('/api/gym/attendance', { gymId, userId: m.user._id });
     setBusy(false);
-    if (!res.success) return show(res.message || 'Attendance fail');
-    show((res as { data?: { duplicate?: boolean } }).data?.duplicate ? 'Aaj already checked-in hai' : 'Attendance marked ✅', false);
+    if (!res.success) return show(res.message || 'Could not mark attendance');
+    show((res as { data?: { duplicate?: boolean } }).data?.duplicate ? 'Already checked in today' : 'Attendance marked ✅', false);
     load();
   };
 
   const removeMember = async () => {
-    if (!confirm(`${m.user.name} ko gym se remove karna hai? Ye undo nahi hoga.`)) return;
+    if (!confirm(`Remove ${m.user.name} from the gym? This cannot be undone.`)) return;
     const res = await api.del(`/api/gym/member/${m._id}`);
-    if (!res.success) return show(res.message || 'Remove fail');
+    if (!res.success) return show(res.message || 'Remove failed');
     router.replace('/members');
   };
 
@@ -79,7 +81,18 @@ function MemberDetailInner() {
           <ArrowLeft size={16} /> Back
         </button>
         <div className="flex items-center gap-4">
-          <Avatar src={m.user.avatar} name={m.user.name} size={64} />
+          <button
+            className="relative shrink-0"
+            onClick={() => can(user, 'canAddMember') && setPhotoOpen(true)}
+            aria-label="Change photo"
+          >
+            <Avatar src={m.user.avatar} name={m.user.name} size={64} />
+            {can(user, 'canAddMember') && (
+              <span className="absolute -bottom-1 -right-1 rounded-full bg-white p-1.5 text-primary shadow">
+                <Camera size={13} />
+              </span>
+            )}
+          </button>
           <div className="min-w-0">
             <h1 className="truncate text-xl font-extrabold">{m.user.name}</h1>
             <a href={`tel:${m.user.phone}`} className="mt-0.5 flex items-center gap-1 text-sm text-white/85">
@@ -143,7 +156,7 @@ function MemberDetailInner() {
         <section>
           <h2 className="mb-2 text-base font-bold">Payments</h2>
           {d.payments.length === 0 ? (
-            <Empty text="Abhi tak koi payment nahi." />
+            <Empty text="No payments yet." />
           ) : (
             <div className="card divide-y divide-border">
               {d.payments.map((p) => (
@@ -162,7 +175,7 @@ function MemberDetailInner() {
         <section>
           <h2 className="mb-2 text-base font-bold">Recent Attendance</h2>
           {d.attendance.length === 0 ? (
-            <Empty text="Koi check-in nahi." />
+            <Empty text="No check-ins yet." />
           ) : (
             <div className="card divide-y divide-border">
               {d.attendance.slice(0, 15).map((a) => (
@@ -218,8 +231,8 @@ function MemberDetailInner() {
               onClick={async () => {
                 const res = await api.put(`/api/gym/member/${m._id}/status`, { status: s });
                 setStatusOpen(false);
-                if (!res.success) return show(res.message || 'Status change fail');
-                show(`Member ${s} ✅`, false);
+                if (!res.success) return show(res.message || 'Status change failed');
+                show(`Member marked ${s} ✅`, false);
                 load();
               }}
             >
@@ -229,7 +242,56 @@ function MemberDetailInner() {
         </div>
       </Modal>
 
+      <Modal open={photoOpen} onClose={() => setPhotoOpen(false)} title="Change Photo">
+        <PhotoUpdateForm
+          membershipId={m._id}
+          current={m.user.avatar}
+          name={m.user.name}
+          onDone={(msg) => {
+            setPhotoOpen(false);
+            show(msg, false);
+            load();
+          }}
+          onError={show}
+        />
+      </Modal>
+
       <Toast msg={toast.msg} error={toast.error} />
+    </div>
+  );
+}
+
+function PhotoUpdateForm({
+  membershipId,
+  current,
+  name,
+  onDone,
+  onError,
+}: {
+  membershipId: string;
+  current?: string;
+  name?: string;
+  onDone: (msg: string) => void;
+  onError: (msg: string) => void;
+}) {
+  const [avatar, setAvatar] = useState(current || '');
+  const [busy, setBusy] = useState(false);
+  return (
+    <div className="space-y-4">
+      <PhotoPicker value={avatar} name={name} onChange={setAvatar} size={96} />
+      <button
+        className="btn"
+        disabled={busy || !avatar || avatar === current}
+        onClick={async () => {
+          setBusy(true);
+          const res = await api.put(`/api/gym/member/${membershipId}/photo`, { avatar });
+          setBusy(false);
+          if (!res.success) return onError(res.message || 'Photo update failed');
+          onDone('Photo updated ✅');
+        }}
+      >
+        {busy ? 'Uploading…' : 'Save Photo'}
+      </button>
     </div>
   );
 }
@@ -269,7 +331,7 @@ function PaymentModal({
   }, [plan, planPrices]);
 
   const submit = async (allowRenew = false) => {
-    if (!Number(amount)) return onError('Amount daalo');
+    if (!Number(amount)) return onError('Enter the amount');
     setBusy(true);
     const res = await api.post('/api/gym/payment', {
       membershipId: membership._id,
@@ -281,10 +343,10 @@ function PaymentModal({
     setBusy(false);
     if (!res.success) {
       if ((res as { alreadyPaid?: boolean }).alreadyPaid) {
-        if (confirm(`${res.message}\n\nPhir bhi advance renew karna hai?`)) return submit(true);
+        if (confirm(`${res.message}\n\nRenew in advance anyway?`)) return submit(true);
         return;
       }
-      return onError(res.message || 'Payment fail');
+      return onError(res.message || 'Payment failed');
     }
     onClose();
     onDone('Payment marked ✅');
@@ -343,7 +405,7 @@ function DueDateForm({
           setBusy(true);
           const res = await api.put(`/api/gym/member/${membershipId}/duedate`, { dueDate });
           setBusy(false);
-          if (!res.success) return onError(res.message || 'Update fail');
+          if (!res.success) return onError(res.message || 'Update failed');
           onDone('Due date updated ✅');
         }}
       >

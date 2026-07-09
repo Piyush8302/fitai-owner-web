@@ -18,9 +18,9 @@ export default function InstallHint() {
         <Share size={18} />
       </div>
       <div className="flex-1 text-xs leading-relaxed text-ink-2">
-        <b>iPhone pe app jaisa use karo + notifications pao:</b> Safari me{' '}
-        <b>Share <Share size={11} className="inline" /></b> dabao → <b>&ldquo;Add to Home Screen&rdquo;</b> select karo.
-        Installed app me hi push notifications milte hain.
+        <b>Use it like an app + get notifications:</b> tap{' '}
+        <b>Share <Share size={11} className="inline" /></b> in Safari → <b>&ldquo;Add to Home Screen&rdquo;</b>.
+        Push notifications only work in the installed app.
       </div>
       <button
         onClick={() => {

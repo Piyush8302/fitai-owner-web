@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import QRCode from 'qrcode';
 import {
   Users,
   FileBarChart,
@@ -12,14 +11,14 @@ import {
   BellRing,
   LogOut,
   ChevronRight,
-  Printer,
 } from 'lucide-react';
-import { api, can, API_BASE_URL, type Gym } from '@/lib/api';
+import { api, can, type Gym } from '@/lib/api';
 import { useApp } from '@/lib/store';
 import GymSwitcher from '@/components/GymSwitcher';
 import { Avatar, Modal, Toast } from '@/components/ui';
 import { enablePush } from '@/lib/push';
 import InstallHint from '@/components/InstallHint';
+import QrModal from '@/components/QrModal';
 
 export default function MorePage() {
   const { user, gym, gymId, gyms, setGymId, logout, refreshGyms } = useApp();
@@ -127,48 +126,6 @@ function MenuBtn({ icon: Icon, label, onClick }: { icon: React.ElementType; labe
   );
 }
 
-// Static wall QR — encodes the public check-in URL (never changes, printable).
-function QrModal({ open, onClose, gym }: { open: boolean; onClose: () => void; gym: Gym }) {
-  const [dataUrl, setDataUrl] = useState('');
-  const url = `${API_BASE_URL}/g/${gym.gymCode}`;
-
-  useEffect(() => {
-    if (!open) return;
-    QRCode.toDataURL(url, { width: 480, margin: 2 }).then(setDataUrl).catch(() => {});
-  }, [open, url]);
-
-  return (
-    <Modal open={open} onClose={onClose} title={`${gym.name} — Wall QR`}>
-      <div className="flex flex-col items-center gap-3">
-        {dataUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={dataUrl} alt="Gym check-in QR" className="w-64 rounded-2xl border border-border" />
-        ) : (
-          <div className="spinner" />
-        )}
-        <p className="text-center text-xs text-muted">
-          Members ise scan karke check-in karte hain (GPS geofence protected).
-          <br />
-          Gym Code: <b>{gym.gymCode}</b>
-        </p>
-        <button
-          className="btn"
-          onClick={() => {
-            const w = window.open('', '_blank');
-            if (!w) return;
-            w.document.write(
-              `<html><head><title>${gym.name} QR</title></head><body style="display:flex;flex-direction:column;align-items:center;font-family:sans-serif"><h2>${gym.name}</h2><img src="${dataUrl}" style="width:420px"/><p>Scan karke check-in karo · ${gym.gymCode}</p><script>window.onload=()=>window.print()</script></body></html>`
-            );
-            w.document.close();
-          }}
-        >
-          <Printer size={17} /> Print QR
-        </button>
-      </div>
-    </Modal>
-  );
-}
-
 function EditGymModal({
   open,
   onClose,
@@ -209,8 +166,8 @@ function EditGymModal({
   }, [open, gym]);
 
   const save = async () => {
-    if (!name.trim()) return onError('Gym ka naam daalo');
-    for (const s of slots) if (!s.open || !s.close) return onError('Har slot me open & close time daalo');
+    if (!name.trim()) return onError('Enter the gym name');
+    for (const s of slots) if (!s.open || !s.close) return onError('Fill open & close time for every slot');
     setBusy(true);
     const res = await api.put(`/api/gym/${gym._id}`, {
       name: name.trim(),
@@ -220,7 +177,7 @@ function EditGymModal({
       planPrices: prices,
     });
     setBusy(false);
-    if (!res.success) return onError(res.message || 'Update fail');
+    if (!res.success) return onError(res.message || 'Update failed');
     onDone();
   };
 
@@ -232,7 +189,7 @@ function EditGymModal({
         <input className="input" placeholder="Gym phone" type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} />
 
         <div>
-          <p className="mb-1.5 text-xs font-bold text-muted">GYM HOURS (khali = 24×7)</p>
+          <p className="mb-1.5 text-xs font-bold text-muted">GYM HOURS (empty = open 24×7)</p>
           {slots.map((s, i) => (
             <div key={i} className="mb-2 flex items-center gap-2">
               <input

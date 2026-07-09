@@ -111,7 +111,7 @@ export default function CashbookPage() {
         {loading ? (
           <Loading />
         ) : entries.length === 0 ? (
-          <Empty text="Koi entry nahi." />
+          <Empty text="No entries yet." />
         ) : (
           <div className="card divide-y divide-border">
             {entries.map((e) => (
@@ -137,9 +137,9 @@ export default function CashbookPage() {
                 {e.source !== 'membership' && gymId !== 'all' && (
                   <button
                     onClick={async () => {
-                      if (!confirm('Entry delete karni hai?')) return;
+                      if (!confirm('Delete this entry?')) return;
                       const res = await api.del(`/api/gym/cashbook/${e._id}`);
-                      if (!res.success) return show(res.message || 'Delete fail');
+                      if (!res.success) return show(res.message || 'Delete failed');
                       load();
                     }}
                     aria-label="Delete entry"
@@ -210,7 +210,7 @@ function AddEntryForm({
           setBusy(true);
           const res = await api.post('/api/gym/cashbook', { gymId, type, amount: Number(amount), description });
           setBusy(false);
-          if (!res.success) return onError(res.message || 'Add fail');
+          if (!res.success) return onError(res.message || 'Could not add entry');
           onDone();
         }}
       >

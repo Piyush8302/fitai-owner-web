@@ -51,25 +51,25 @@ export default function LoginPage() {
     if (busy) return;
     if (mode === 'phone') {
       const clean = phone.replace(/\D/g, '');
-      if (clean.length < 10) return show('10-digit mobile number daalo');
+      if (clean.length < 10) return show('Enter a 10-digit mobile number');
       setBusy(true);
       // Same gating as the app's Admin chip: only approved owners/staff proceed.
       const st = await api.post<{ status?: string }>('/api/auth/owner-status', { phone: clean });
       const status = (st as { status?: string }).status;
       if (!st.success) {
         setBusy(false);
-        return show(st.message || 'Kuch galat ho gaya');
+        return show(st.message || 'Something went wrong');
       }
       if (status !== 'approved') {
         setBusy(false);
-        if (status === 'pending') return show('Aapki gym-owner request abhi pending hai — approval ka wait karo.');
-        if (status === 'rejected') return show('Aapki owner request reject hui thi. Support se contact karo.');
-        return show('Ye number kisi approved gym owner/staff ka nahi hai. Pehle app se gym register karo.');
+        if (status === 'pending') return show('Your gym-owner request is still pending approval.');
+        if (status === 'rejected') return show('Your owner request was rejected. Please contact support.');
+        return show('This number is not an approved gym owner/staff. Register your gym in the FitAI app first.');
       }
       if (await sendOtp()) setStep('otp');
       setBusy(false);
     } else {
-      if (!/^\S+@\S+\.\S+$/.test(email.trim())) return show('Valid email daalo');
+      if (!/^\S+@\S+\.\S+$/.test(email.trim())) return show('Enter a valid email address');
       setBusy(true);
       if (await sendOtp()) setStep('otp');
       setBusy(false);
@@ -94,7 +94,7 @@ export default function LoginPage() {
     if (!['gym_owner', 'gym_staff', 'admin'].includes(user.role)) {
       setBusy(false);
       setOtp('');
-      return show('Ye account gym owner/staff ka nahi hai.');
+      return show('This account is not a gym owner/staff account.');
     }
     saveAuth(token, user);
     router.replace('/dashboard');
@@ -113,7 +113,7 @@ export default function LoginPage() {
           <Dumbbell size={30} />
         </div>
         <h1 className="text-3xl font-extrabold">FitAI Owner</h1>
-        <p className="mt-1 text-sm text-white/85">Apna gym manage karo — members, fees, attendance, sab kuch.</p>
+        <p className="mt-1 text-sm text-white/85">Manage your gym — members, fees, attendance & more.</p>
       </div>
 
       <div className="flex-1 px-5 pt-8">
@@ -156,9 +156,9 @@ export default function LoginPage() {
               {busy ? 'Checking…' : 'Send OTP'}
             </button>
             <p className="mt-6 text-center text-xs text-muted">
-              Sirf approved gym owners / staff login kar sakte hain.
+              Only approved gym owners / staff can log in.
               <br />
-              Naya gym register karna hai? FitAI app use karo.
+              Want to register a new gym? Use the FitAI app.
             </p>
           </>
         ) : (
@@ -167,7 +167,7 @@ export default function LoginPage() {
               <ArrowLeft size={16} /> Change {mode}
             </button>
             <p className="mb-3 text-sm text-ink-2">
-              OTP bheja gaya: <b>{mode === 'phone' ? phone : email}</b>
+              OTP sent to <b>{mode === 'phone' ? phone : email}</b>
             </p>
             <input
               ref={otpRef}

@@ -3,12 +3,12 @@
 import { useCallback, useEffect, useRef, useState, Suspense } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { Search, UserPlus, Camera, ChevronRight } from 'lucide-react';
+import { Search, UserPlus, ChevronRight } from 'lucide-react';
 import { api, can, fmtDate, PLANS, PLAN_LABEL, type MemberRow } from '@/lib/api';
 import { useApp } from '@/lib/store';
 import GymSwitcher from '@/components/GymSwitcher';
 import { Avatar, Modal, Loading, Empty, StatusBadge, DueBadge, Toast } from '@/components/ui';
-import { fileToSmallBase64 } from '@/lib/image';
+import PhotoPicker from '@/components/PhotoPicker';
 
 const STATUSES = ['all', 'active', 'inactive', 'blocked', 'left'] as const;
 
@@ -111,7 +111,7 @@ function MembersInner() {
           <Search size={17} className="text-white/80" />
           <input
             className="w-full bg-transparent text-sm text-white placeholder-white/70 outline-none"
-            placeholder="Name ya phone se search karo"
+            placeholder="Search by name or phone"
             value={search}
             onChange={(e) => onSearch(e.target.value)}
           />
@@ -130,7 +130,7 @@ function MembersInner() {
         {loading ? (
           <Loading />
         ) : rows.length === 0 ? (
-          <Empty text="Koi member nahi mila." />
+          <Empty text="No members found." />
         ) : (
           <div className="card divide-y divide-border">
             {rows.map((m) => (
@@ -196,7 +196,6 @@ function AddMemberModal({
   const [fee, setFee] = useState('');
   const [avatar, setAvatar] = useState('');
   const [busy, setBusy] = useState(false);
-  const fileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const preset = planPrices?.[plan];
@@ -205,8 +204,8 @@ function AddMemberModal({
 
   const submit = async () => {
     const cleanPhone = phone.replace(/\D/g, '');
-    if (!name.trim()) return onError('Member ka naam daalo');
-    if (cleanPhone.length < 10) return onError('10-digit phone daalo');
+    if (!name.trim()) return onError('Enter member name');
+    if (cleanPhone.length < 10) return onError('Enter a 10-digit phone number');
     setBusy(true);
     const res = await api.post('/api/gym/members', {
       gymId,
@@ -217,36 +216,20 @@ function AddMemberModal({
       avatar: avatar || undefined,
     });
     setBusy(false);
-    if (!res.success) return onError(res.message || 'Add nahi hua');
-    if ((res as { alreadyMember?: boolean }).alreadyMember) return onError('Ye member pehle se added hai');
+    if (!res.success) return onError(res.message || 'Could not add member');
+    if ((res as { alreadyMember?: boolean }).alreadyMember) return onError('This member is already added');
     setName('');
     setPhone('');
     setFee('');
     setAvatar('');
     onClose();
-    onDone('Member add ho gaya ✅');
+    onDone('Member added ✅');
   };
 
   return (
     <Modal open={open} onClose={onClose} title="Add Member">
-      <div className="mb-4 flex justify-center">
-        <button className="relative" onClick={() => fileRef.current?.click()}>
-          <Avatar src={avatar} name={name || '+'} size={72} />
-          <span className="absolute -bottom-1 -right-1 rounded-full bg-primary p-1.5 text-white">
-            <Camera size={13} />
-          </span>
-        </button>
-        <input
-          ref={fileRef}
-          type="file"
-          accept="image/*"
-          capture="environment"
-          className="hidden"
-          onChange={async (e) => {
-            const f = e.target.files?.[0];
-            if (f) setAvatar(await fileToSmallBase64(f));
-          }}
-        />
+      <div className="mb-4">
+        <PhotoPicker value={avatar} name={name} onChange={setAvatar} />
       </div>
       <div className="space-y-3">
         <input className="input" placeholder="Name" value={name} onChange={(e) => setName(e.target.value)} />
