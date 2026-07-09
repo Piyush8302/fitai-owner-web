@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Dumbbell, ArrowLeft } from 'lucide-react';
 import { api, saveAuth, getToken, getUser, type AuthUser } from '@/lib/api';
+import { restoreLoginSilently, storeLoginCredential } from '@/lib/creds';
 import { Toast } from '@/components/ui';
 
 type Step = 'id' | 'otp';
@@ -19,7 +20,16 @@ export default function LoginPage() {
 
   useEffect(() => {
     const u = getUser();
-    if (getToken() && u && ['gym_owner', 'gym_staff', 'admin'].includes(u.role)) router.replace('/dashboard');
+    if (getToken() && u && ['gym_owner', 'gym_staff', 'admin'].includes(u.role)) {
+      router.replace('/dashboard');
+      return;
+    }
+    // Site data was cleared? Restore the session from the password manager
+    // (it survives history/cache wipes) — or at least prefill the number.
+    restoreLoginSilently().then((r) => {
+      if (r === 'restored') router.replace('/dashboard');
+      else if (r) setPhone(r);
+    });
   }, [router]);
 
   useEffect(() => {
@@ -81,6 +91,9 @@ export default function LoginPage() {
       return show('This account is not a gym owner/staff account.');
     }
     saveAuth(token, user);
+    // Back the session up in the password manager so a history/data clear
+    // doesn't force a fresh OTP next time.
+    await storeLoginCredential(phone, token, user.name);
     router.replace('/dashboard');
   };
 

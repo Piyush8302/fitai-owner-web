@@ -4,6 +4,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState } 
 import { useRouter } from 'next/navigation';
 import { api, getToken, getUser, clearAuth, type AuthUser, type Gym } from './api';
 import { syncPushSilently } from './push';
+import { forgetSilentLogin } from './creds';
 
 type AppState = {
   user: AuthUser | null;
@@ -55,6 +56,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   const logout = useCallback(() => {
     clearAuth();
+    // Explicit logout must stick — block silent credential restore until the
+    // user logs in again themselves.
+    forgetSilentLogin();
     router.replace('/login');
   }, [router]);
 

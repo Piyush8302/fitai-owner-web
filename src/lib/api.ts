@@ -79,6 +79,12 @@ async function request<T>(
       headers,
       body: body !== undefined ? JSON.stringify(body) : undefined,
     });
+    // Session token expired/invalid → back to login (fresh OTP or silent restore).
+    if (res.status === 401 && token && typeof window !== 'undefined') {
+      clearAuth();
+      window.location.href = '/login';
+      return { success: false, message: 'Session expired — please log in again' };
+    }
     return (await res.json()) as ApiResult<T>;
   } catch {
     return { success: false, message: 'Network error — check your connection' };
