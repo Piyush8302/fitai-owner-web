@@ -71,17 +71,17 @@ export default function CashbookPage() {
           <GymSwitcher />
         </div>
         <div className="mt-3 grid grid-cols-3 gap-2.5 text-center">
-          <div className="card p-3">
+          <div className="rounded-[18px] border border-success/15 bg-success/10 p-3">
             <p className="text-[15px] font-extrabold tracking-tight text-success">{fmtMoney(shownIncome)}</p>
-            <p className="text-[10.5px] font-medium text-muted">Income</p>
+            <p className="text-[10.5px] font-semibold text-success/70">Income ↑</p>
           </div>
-          <div className="card p-3">
+          <div className="rounded-[18px] border border-error/15 bg-error/10 p-3">
             <p className="text-[15px] font-extrabold tracking-tight text-error">{fmtMoney(shownExpense)}</p>
-            <p className="text-[10.5px] font-medium text-muted">Expense</p>
+            <p className="text-[10.5px] font-semibold text-error/70">Expense ↓</p>
           </div>
-          <div className="card p-3">
-            <p className="text-[15px] font-extrabold tracking-tight">{fmtMoney(shownIncome - shownExpense)}</p>
-            <p className="text-[10.5px] font-medium text-muted">Balance</p>
+          <div className="rounded-[18px] border border-primary/15 bg-primary/10 p-3">
+            <p className="text-[15px] font-extrabold tracking-tight text-primary">{fmtMoney(shownIncome - shownExpense)}</p>
+            <p className="text-[10.5px] font-semibold text-primary/70">Balance</p>
           </div>
         </div>
       </div>
@@ -98,10 +98,16 @@ export default function CashbookPage() {
           </div>
           {gymId !== 'all' && can(user, 'canAccessCashbook') && (
             <div className="flex gap-2">
-              <button className="chip chip-active" onClick={() => setAddType('income')}>
+              <button
+                className="chip border-success bg-success text-white shadow-md shadow-success/30"
+                onClick={() => setAddType('income')}
+              >
                 <Plus size={13} /> Income
               </button>
-              <button className="chip bg-error text-white border-error" onClick={() => setAddType('expense')}>
+              <button
+                className="chip border-error bg-error text-white shadow-md shadow-error/30"
+                onClick={() => setAddType('expense')}
+              >
                 <Minus size={13} /> Expense
               </button>
             </div>
@@ -195,7 +201,6 @@ function AddEntryForm({
         placeholder="Amount (₹)"
         value={amount}
         onChange={(e) => setAmount(e.target.value)}
-        autoFocus
       />
       <input
         className="input"

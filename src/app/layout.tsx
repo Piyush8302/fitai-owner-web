@@ -24,6 +24,9 @@ export const viewport: Viewport = {
   userScalable: false,
   themeColor: '#6C63FF',
   viewportFit: 'cover',
+  // Keyboard opens over the page instead of resizing it — stops bottom sheets
+  // from jumping around while typing (Android Chrome).
+  interactiveWidget: 'resizes-visual',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

@@ -115,7 +115,14 @@ function MembersInner() {
     <div>
       <div className="sticky top-0 z-30 border-b border-border/70 bg-bg/85 px-5 pb-3 pt-14 backdrop-blur-xl safe-top">
         <div className="flex items-center justify-between">
-          <h1 className="text-[26px] font-extrabold tracking-tight">Members {total ? `(${total})` : ''}</h1>
+          <h1 className="flex items-center gap-2.5 text-[26px] font-extrabold tracking-tight">
+            Members
+            {total > 0 && (
+              <span className="rounded-full border border-primary/15 bg-primary/10 px-3 py-1 text-[13px] font-bold text-primary">
+                {total}
+              </span>
+            )}
+          </h1>
           {can(user, 'canAddMember') && gymId !== 'all' && (
             <button className="icon-btn text-primary" onClick={() => setShowAdd(true)} aria-label="Add member">
               <UserPlus size={19} />

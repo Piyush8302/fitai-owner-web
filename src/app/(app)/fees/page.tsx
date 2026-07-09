@@ -69,17 +69,17 @@ export default function FeesPage() {
           <GymSwitcher allowAll={false} />
         </div>
         <div className="mt-3 grid grid-cols-3 gap-2.5 text-center">
-          <div className="card p-3">
+          <div className="rounded-[18px] border border-error/15 bg-error/10 p-3">
             <p className="text-[17px] font-extrabold tracking-tight text-error">{fmtMoney(summary?.totalPending)}</p>
-            <p className="text-[10.5px] font-medium text-muted">Pending</p>
+            <p className="text-[10.5px] font-semibold text-error/70">Pending</p>
           </div>
-          <div className="card p-3">
-            <p className="text-[17px] font-extrabold tracking-tight">{summary?.overdue ?? '—'}</p>
-            <p className="text-[10.5px] font-medium text-muted">Overdue</p>
+          <div className="rounded-[18px] border border-warning/15 bg-warning/10 p-3">
+            <p className="text-[17px] font-extrabold tracking-tight text-warning">{summary?.overdue ?? '—'}</p>
+            <p className="text-[10.5px] font-semibold text-warning/70">Overdue</p>
           </div>
-          <div className="card p-3">
-            <p className="text-[17px] font-extrabold tracking-tight text-warning">{summary?.dueToday ?? '—'}</p>
-            <p className="text-[10.5px] font-medium text-muted">Due Today</p>
+          <div className="rounded-[18px] border border-primary/15 bg-primary/10 p-3">
+            <p className="text-[17px] font-extrabold tracking-tight text-primary">{summary?.dueToday ?? '—'}</p>
+            <p className="text-[10.5px] font-semibold text-primary/70">Due Today</p>
           </div>
         </div>
       </div>
