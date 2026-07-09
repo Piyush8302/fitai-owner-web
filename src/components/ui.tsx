@@ -1,7 +1,7 @@
 'use client';
 
 import { X } from 'lucide-react';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
 export function Avatar({ src, name, size = 44 }: { src?: string; name?: string; size?: number }) {
   const initial = (name || '?').trim().charAt(0).toUpperCase();
@@ -57,17 +57,39 @@ export function Modal({
   title: string;
   children: React.ReactNode;
 }) {
+  // With viewport interactive-widget=resizes-visual the keyboard overlays the
+  // page instead of resizing it — so lift the sheet by the keyboard height,
+  // otherwise the submit button hides behind the keyboard.
+  const [kb, setKb] = useState(0);
   useEffect(() => {
     document.body.style.overflow = open ? 'hidden' : '';
+    const vv = typeof window !== 'undefined' ? window.visualViewport : null;
+    if (!open || !vv) {
+      setKb(0);
+      return () => {
+        document.body.style.overflow = '';
+      };
+    }
+    const onResize = () => setKb(Math.max(0, window.innerHeight - vv.height - vv.offsetTop));
+    vv.addEventListener('resize', onResize);
+    vv.addEventListener('scroll', onResize);
+    onResize();
     return () => {
       document.body.style.overflow = '';
+      vv.removeEventListener('resize', onResize);
+      vv.removeEventListener('scroll', onResize);
     };
   }, [open]);
   if (!open) return null;
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/45 backdrop-blur-[2px]" onClick={onClose}>
       <div
-        className="sheet w-full max-w-md rounded-t-[30px] bg-card px-5 pb-8 pt-3 safe-bottom max-h-[88dvh] overflow-y-auto"
+        className="sheet w-full max-w-md overflow-y-auto rounded-t-[30px] bg-card px-5 pb-8 pt-3 safe-bottom"
+        style={{
+          marginBottom: kb,
+          maxHeight: kb ? `calc(100dvh - ${kb + 24}px)` : '88dvh',
+          transition: 'margin-bottom 0.2s ease-out',
+        }}
         onClick={(e) => e.stopPropagation()}
       >
         <div className="mx-auto mb-3 h-1.5 w-10 rounded-full bg-border" />
