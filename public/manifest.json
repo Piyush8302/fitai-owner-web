@@ -1,0 +1,16 @@
+{
+  "name": "FitAI Gym Owner",
+  "short_name": "FitAI Owner",
+  "description": "Apna gym manage karo — members, attendance, fees, cashbook, staff & reports.",
+  "start_url": "/dashboard",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "theme_color": "#6C63FF",
+  "background_color": "#F4F5FB",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
