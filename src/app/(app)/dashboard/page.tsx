@@ -11,7 +11,7 @@ import InstallHint from '@/components/InstallHint';
 import QrModal from '@/components/QrModal';
 
 type Stats = { totalMembers: number; todayFootfall: number; dueMembers: number; pendingFees: number; branches?: number };
-type AttRow = { _id: string; user?: { name?: string; phone?: string }; checkInAt: string; method: string };
+type AttRow = { _id: string; user?: { name?: string; phone?: string; avatar?: string }; checkInAt: string; method: string };
 
 const istDay = () => {
   const d = new Date(Date.now() + 5.5 * 3600 * 1000);
@@ -124,7 +124,7 @@ export default function DashboardPage() {
               <div className="card divide-y divide-border">
                 {today.map((a) => (
                   <div key={a._id} className="flex items-center gap-3 p-3">
-                    <Avatar name={a.user?.name} size={38} />
+                    <Avatar src={a.user?.avatar} name={a.user?.name} size={38} />
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-sm font-semibold">{a.user?.name || 'Member'}</p>
                       <p className="text-xs text-muted">{a.user?.phone}</p>
