@@ -58,19 +58,19 @@ export default function NotificationsPage() {
 
   return (
     <div>
-      <div className="grad-hero rounded-b-[28px] px-5 pb-5 pt-12 text-white safe-top">
-        <button onClick={() => router.back()} className="mb-3 flex items-center gap-1 text-sm font-semibold text-white/90">
-          <ArrowLeft size={16} /> Back
+      <div className="px-5 pb-3 pt-14 safe-top">
+        <button onClick={() => router.back()} className="icon-btn mb-4" aria-label="Back">
+          <ArrowLeft size={18} />
         </button>
         <div className="flex items-center justify-between">
-          <h1 className="text-xl font-extrabold">Notifications</h1>
-          <button className="flex items-center gap-1 rounded-full bg-white/20 px-3 py-1.5 text-xs font-semibold" onClick={markAll}>
+          <h1 className="text-[26px] font-extrabold tracking-tight">Notifications</h1>
+          <button className="chip" onClick={markAll}>
             <CheckCheck size={14} /> Mark all read
           </button>
         </div>
       </div>
 
-      <div className="px-4 pt-4">
+      <div className="px-4">
         {loading ? (
           <Loading />
         ) : rows.length === 0 ? (

@@ -95,22 +95,22 @@ function MembersInner() {
 
   return (
     <div>
-      <div className="grad-hero rounded-b-[28px] px-5 pb-5 pt-12 text-white safe-top">
+      <div className="px-5 pb-3 pt-14 safe-top">
         <div className="flex items-center justify-between">
-          <h1 className="text-xl font-extrabold">Members {total ? `(${total})` : ''}</h1>
+          <h1 className="text-[26px] font-extrabold tracking-tight">Members {total ? `(${total})` : ''}</h1>
           {can(user, 'canAddMember') && gymId !== 'all' && (
-            <button className="rounded-full bg-white/20 p-2.5" onClick={() => setShowAdd(true)} aria-label="Add member">
-              <UserPlus size={20} />
+            <button className="icon-btn text-primary" onClick={() => setShowAdd(true)} aria-label="Add member">
+              <UserPlus size={19} />
             </button>
           )}
         </div>
         <div className="mt-3">
           <GymSwitcher />
         </div>
-        <div className="mt-3 flex items-center gap-2 rounded-2xl bg-white/20 px-3.5 py-2.5">
-          <Search size={17} className="text-white/80" />
+        <div className="card mt-3 flex items-center gap-2.5 px-4 py-3">
+          <Search size={17} className="text-muted" />
           <input
-            className="w-full bg-transparent text-sm text-white placeholder-white/70 outline-none"
+            className="w-full bg-transparent text-[15px] outline-none placeholder:text-muted"
             placeholder="Search by name or phone"
             value={search}
             onChange={(e) => onSearch(e.target.value)}
@@ -118,7 +118,7 @@ function MembersInner() {
         </div>
       </div>
 
-      <div className="px-4 pt-3">
+      <div className="px-4">
         <div className="no-scrollbar mb-3 flex gap-2 overflow-x-auto">
           {STATUSES.map((s) => (
             <button key={s} className={`chip capitalize ${status === s ? 'chip-active' : ''}`} onClick={() => setStatus(s)}>

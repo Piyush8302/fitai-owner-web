@@ -57,16 +57,16 @@ export default function DashboardPage() {
 
   return (
     <div>
-      <div className="grad-hero rounded-b-[28px] px-5 pb-6 pt-12 text-white safe-top">
+      <div className="px-5 pb-2 pt-14 safe-top">
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-xs text-white/80">Welcome back 👋</p>
-            <h1 className="text-xl font-extrabold">{user?.name || 'Owner'}</h1>
+            <p className="text-[13px] font-medium text-muted">Welcome back 👋</p>
+            <h1 className="text-[26px] font-extrabold tracking-tight">{user?.name || 'Owner'}</h1>
           </div>
-          <Link href="/notifications" className="relative rounded-full bg-white/20 p-2.5">
-            <Bell size={20} />
+          <Link href="/notifications" className="icon-btn relative">
+            <Bell size={19} />
             {unread > 0 && (
-              <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-secondary px-1 text-[10px] font-bold">
+              <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-secondary px-1 text-[10px] font-bold text-white">
                 {unread > 99 ? '99+' : unread}
               </span>
             )}
@@ -77,17 +77,21 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      <div className="px-4 pt-4">
+      <div className="px-4 pt-3">
         <InstallHint />
         <div className="grid grid-cols-2 gap-3">
           {tiles.map((t) => {
             const Icon = t.icon;
             return (
-              <div key={t.label} className={`${t.cls} rounded-2xl p-4 text-white shadow-md`}>
-                <div className="mb-2 inline-flex rounded-xl bg-white/20 p-2">
+              <div
+                key={t.label}
+                className={`${t.cls} rounded-[22px] p-4 text-white`}
+                style={{ boxShadow: '0 10px 26px rgba(11,11,18,0.14), inset 0 1px 0 rgba(255,255,255,0.25)' }}
+              >
+                <div className="mb-2.5 inline-flex rounded-xl bg-white/22 p-2 backdrop-blur">
                   <Icon size={18} />
                 </div>
-                <p className="text-2xl font-extrabold leading-tight">{t.value}</p>
+                <p className="text-[24px] font-extrabold leading-tight tracking-tight">{t.value}</p>
                 <p className="text-xs font-medium text-white/85">{t.label}</p>
               </div>
             );

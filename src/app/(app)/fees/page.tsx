@@ -63,28 +63,28 @@ export default function FeesPage() {
 
   return (
     <div>
-      <div className="grad-2 rounded-b-[28px] px-5 pb-5 pt-12 text-white safe-top">
-        <h1 className="text-xl font-extrabold">Fees</h1>
+      <div className="px-5 pb-3 pt-14 safe-top">
+        <h1 className="text-[26px] font-extrabold tracking-tight">Fees</h1>
         <div className="mt-3">
           <GymSwitcher allowAll={false} />
         </div>
-        <div className="mt-4 grid grid-cols-3 gap-2 text-center">
-          <div className="rounded-2xl bg-white/15 p-2.5">
-            <p className="text-lg font-extrabold">{fmtMoney(summary?.totalPending)}</p>
-            <p className="text-[10px] text-white/85">Pending</p>
+        <div className="mt-3 grid grid-cols-3 gap-2.5 text-center">
+          <div className="card p-3">
+            <p className="text-[17px] font-extrabold tracking-tight text-error">{fmtMoney(summary?.totalPending)}</p>
+            <p className="text-[10.5px] font-medium text-muted">Pending</p>
           </div>
-          <div className="rounded-2xl bg-white/15 p-2.5">
-            <p className="text-lg font-extrabold">{summary?.overdue ?? '—'}</p>
-            <p className="text-[10px] text-white/85">Overdue</p>
+          <div className="card p-3">
+            <p className="text-[17px] font-extrabold tracking-tight">{summary?.overdue ?? '—'}</p>
+            <p className="text-[10.5px] font-medium text-muted">Overdue</p>
           </div>
-          <div className="rounded-2xl bg-white/15 p-2.5">
-            <p className="text-lg font-extrabold">{summary?.dueToday ?? '—'}</p>
-            <p className="text-[10px] text-white/85">Due Today</p>
+          <div className="card p-3">
+            <p className="text-[17px] font-extrabold tracking-tight text-warning">{summary?.dueToday ?? '—'}</p>
+            <p className="text-[10.5px] font-medium text-muted">Due Today</p>
           </div>
         </div>
       </div>
 
-      <div className="px-4 pt-3">
+      <div className="px-4">
         <div className="no-scrollbar mb-3 flex gap-2 overflow-x-auto">
           {BUCKETS.map((b) => (
             <button key={b.key} className={`chip ${bucket === b.key ? 'chip-active' : ''}`} onClick={() => setBucket(b.key)}>

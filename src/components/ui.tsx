@@ -65,14 +65,15 @@ export function Modal({
   }, [open]);
   if (!open) return null;
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/45 backdrop-blur-[2px]" onClick={onClose}>
       <div
-        className="w-full max-w-md rounded-t-3xl bg-card p-5 pb-8 safe-bottom max-h-[88dvh] overflow-y-auto"
+        className="sheet w-full max-w-md rounded-t-[30px] bg-card px-5 pb-8 pt-3 safe-bottom max-h-[88dvh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
+        <div className="mx-auto mb-3 h-1.5 w-10 rounded-full bg-border" />
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-lg font-bold">{title}</h2>
-          <button onClick={onClose} className="rounded-full bg-surface p-2" aria-label="Close">
+          <h2 className="text-[19px] font-bold tracking-tight">{title}</h2>
+          <button onClick={onClose} className="rounded-full bg-surface p-2 active:scale-90 transition-transform" aria-label="Close">
             <X size={18} />
           </button>
         </div>
@@ -98,8 +99,8 @@ export function Toast({ msg, error }: { msg: string; error?: boolean }) {
   if (!msg) return null;
   return (
     <div
-      className={`fixed bottom-24 left-1/2 z-[60] w-[90%] max-w-sm -translate-x-1/2 rounded-2xl px-4 py-3 text-center text-sm font-semibold text-white shadow-lg ${
-        error ? 'bg-error' : 'bg-ink'
+      className={`fixed bottom-28 left-1/2 z-[60] w-[88%] max-w-sm -translate-x-1/2 rounded-2xl px-4 py-3.5 text-center text-sm font-semibold text-white shadow-xl backdrop-blur ${
+        error ? 'bg-error/95' : 'bg-ink/92'
       }`}
     >
       {msg}

@@ -18,8 +18,8 @@ function BottomNav() {
     { href: '/more', label: 'More', icon: Menu },
   ];
   return (
-    <nav className="fixed bottom-0 left-1/2 z-40 w-full max-w-md -translate-x-1/2 border-t border-border bg-card safe-bottom">
-      <div className="flex">
+    <nav className="tabbar">
+      <div className="flex px-2 py-1.5">
         {tabs.map((t) => {
           const active = path.startsWith(t.href);
           const Icon = t.icon;
@@ -27,11 +27,17 @@ function BottomNav() {
             <Link
               key={t.href}
               href={t.href}
-              className={`flex flex-1 flex-col items-center gap-0.5 py-2.5 text-[11px] font-semibold ${
+              className={`flex flex-1 flex-col items-center gap-0.5 py-1.5 text-[10.5px] font-semibold ${
                 active ? 'text-primary' : 'text-muted'
               }`}
             >
-              <Icon size={21} strokeWidth={active ? 2.5 : 2} />
+              <span
+                className={`flex h-8 w-14 items-center justify-center rounded-full transition-colors ${
+                  active ? 'bg-primary/12' : ''
+                }`}
+              >
+                <Icon size={20} strokeWidth={active ? 2.4 : 2} />
+              </span>
               {t.label}
             </Link>
           );
@@ -46,7 +52,7 @@ function Shell({ children }: { children: React.ReactNode }) {
   if (!ready) return <Loading full />;
   return (
     <>
-      <main className="pb-24">{children}</main>
+      <main className="pb-32">{children}</main>
       <BottomNav />
     </>
   );

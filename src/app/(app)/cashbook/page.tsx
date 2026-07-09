@@ -57,12 +57,12 @@ export default function CashbookPage() {
 
   return (
     <div>
-      <div className="grad-3 rounded-b-[28px] px-5 pb-5 pt-12 text-white safe-top">
+      <div className="px-5 pb-3 pt-14 safe-top">
         <div className="flex items-center justify-between">
-          <h1 className="text-xl font-extrabold">Cashbook</h1>
+          <h1 className="text-[26px] font-extrabold tracking-tight">Cashbook</h1>
           <input
             type="month"
-            className="rounded-xl bg-white/20 px-2.5 py-1.5 text-xs font-semibold text-white outline-none"
+            className="rounded-full border border-border bg-card px-3 py-1.5 text-xs font-semibold text-ink shadow-sm outline-none"
             value={month}
             onChange={(e) => setMonth(e.target.value || monthStr())}
           />
@@ -70,23 +70,23 @@ export default function CashbookPage() {
         <div className="mt-3">
           <GymSwitcher />
         </div>
-        <div className="mt-4 grid grid-cols-3 gap-2 text-center">
-          <div className="rounded-2xl bg-white/15 p-2.5">
-            <p className="text-base font-extrabold">{fmtMoney(shownIncome)}</p>
-            <p className="text-[10px] text-white/85">Income</p>
+        <div className="mt-3 grid grid-cols-3 gap-2.5 text-center">
+          <div className="card p-3">
+            <p className="text-[15px] font-extrabold tracking-tight text-success">{fmtMoney(shownIncome)}</p>
+            <p className="text-[10.5px] font-medium text-muted">Income</p>
           </div>
-          <div className="rounded-2xl bg-white/15 p-2.5">
-            <p className="text-base font-extrabold">{fmtMoney(shownExpense)}</p>
-            <p className="text-[10px] text-white/85">Expense</p>
+          <div className="card p-3">
+            <p className="text-[15px] font-extrabold tracking-tight text-error">{fmtMoney(shownExpense)}</p>
+            <p className="text-[10.5px] font-medium text-muted">Expense</p>
           </div>
-          <div className="rounded-2xl bg-white/15 p-2.5">
-            <p className="text-base font-extrabold">{fmtMoney(shownIncome - shownExpense)}</p>
-            <p className="text-[10px] text-white/85">Balance</p>
+          <div className="card p-3">
+            <p className="text-[15px] font-extrabold tracking-tight">{fmtMoney(shownIncome - shownExpense)}</p>
+            <p className="text-[10.5px] font-medium text-muted">Balance</p>
           </div>
         </div>
       </div>
 
-      <div className="px-4 pt-3">
+      <div className="px-4">
         <div className="mb-3 flex items-center justify-between">
           <div className="flex gap-2">
             <button className={`chip ${view === 'month' ? 'chip-active' : ''}`} onClick={() => setView('month')}>

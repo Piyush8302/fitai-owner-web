@@ -76,9 +76,9 @@ function MemberDetailInner() {
 
   return (
     <div>
-      <div className="grad-hero rounded-b-[28px] px-5 pb-6 pt-12 text-white safe-top">
-        <button onClick={() => router.back()} className="mb-3 flex items-center gap-1 text-sm font-semibold text-white/90">
-          <ArrowLeft size={16} /> Back
+      <div className="px-5 pb-4 pt-14 safe-top">
+        <button onClick={() => router.back()} className="icon-btn mb-4" aria-label="Back">
+          <ArrowLeft size={18} />
         </button>
         <div className="flex items-center gap-4">
           <button
@@ -86,16 +86,16 @@ function MemberDetailInner() {
             onClick={() => can(user, 'canAddMember') && setPhotoOpen(true)}
             aria-label="Change photo"
           >
-            <Avatar src={m.user.avatar} name={m.user.name} size={64} />
+            <Avatar src={m.user.avatar} name={m.user.name} size={68} />
             {can(user, 'canAddMember') && (
-              <span className="absolute -bottom-1 -right-1 rounded-full bg-white p-1.5 text-primary shadow">
+              <span className="absolute -bottom-1 -right-1 rounded-full bg-primary p-1.5 text-white shadow-md">
                 <Camera size={13} />
               </span>
             )}
           </button>
           <div className="min-w-0">
-            <h1 className="truncate text-xl font-extrabold">{m.user.name}</h1>
-            <a href={`tel:${m.user.phone}`} className="mt-0.5 flex items-center gap-1 text-sm text-white/85">
+            <h1 className="truncate text-[22px] font-extrabold tracking-tight">{m.user.name}</h1>
+            <a href={`tel:${m.user.phone}`} className="mt-0.5 flex items-center gap-1 text-sm font-medium text-muted">
               <Phone size={13} /> {m.user.phone}
             </a>
             <div className="mt-1.5 flex gap-2">
@@ -106,7 +106,7 @@ function MemberDetailInner() {
         </div>
       </div>
 
-      <div className="space-y-4 px-4 pt-4">
+      <div className="space-y-4 px-4">
         <div className="card grid grid-cols-3 divide-x divide-border p-3 text-center">
           <div>
             <p className="text-lg font-extrabold text-primary">{d.thisMonth}</p>

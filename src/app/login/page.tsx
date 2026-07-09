@@ -104,16 +104,19 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-dvh flex-col safe-top">
-      <div className="grad-hero rounded-b-[36px] px-6 pb-12 pt-14 text-white">
-        <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-white/20">
-          <Dumbbell size={30} />
+    <div className="flex min-h-dvh flex-col justify-center px-6 safe-top">
+      <div className="mb-10">
+        <div
+          className="grad-hero mb-5 flex h-[72px] w-[72px] items-center justify-center rounded-[22px] text-white"
+          style={{ boxShadow: '0 12px 30px rgba(108,99,255,0.35), inset 0 1px 0 rgba(255,255,255,0.3)' }}
+        >
+          <Dumbbell size={34} />
         </div>
-        <h1 className="text-3xl font-extrabold">FitAI Owner</h1>
-        <p className="mt-1 text-sm text-white/85">Manage your gym — members, fees, attendance & more.</p>
+        <h1 className="text-[32px] font-extrabold tracking-tight">FitAI Owner</h1>
+        <p className="mt-1 text-[15px] text-muted">Manage your gym — members, fees, attendance & more.</p>
       </div>
 
-      <div className="flex-1 px-5 pt-8">
+      <div>
         {step === 'id' ? (
           <>
             <label className="mb-1.5 block text-xs font-bold text-muted">MOBILE NUMBER</label>

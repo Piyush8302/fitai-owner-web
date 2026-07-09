@@ -53,13 +53,13 @@ export default function ReportsPage() {
 
   return (
     <div>
-      <div className="grad-hero rounded-b-[28px] px-5 pb-5 pt-12 text-white safe-top print:hidden">
-        <button onClick={() => router.back()} className="mb-3 flex items-center gap-1 text-sm font-semibold text-white/90">
-          <ArrowLeft size={16} /> Back
+      <div className="px-5 pb-3 pt-14 safe-top print:hidden">
+        <button onClick={() => router.back()} className="icon-btn mb-4" aria-label="Back">
+          <ArrowLeft size={18} />
         </button>
         <div className="flex items-center justify-between">
-          <h1 className="text-xl font-extrabold">Reports</h1>
-          <button className="rounded-full bg-white/20 p-2.5" onClick={() => window.print()} aria-label="Print report">
+          <h1 className="text-[26px] font-extrabold tracking-tight">Reports</h1>
+          <button className="icon-btn" onClick={() => window.print()} aria-label="Print report">
             <Printer size={18} />
           </button>
         </div>
@@ -69,7 +69,7 @@ export default function ReportsPage() {
         <div className="mt-3 flex items-center gap-2">
           <input
             type="month"
-            className="rounded-xl bg-white/20 px-2.5 py-1.5 text-xs font-semibold text-white outline-none"
+            className="rounded-full border border-border bg-card px-3 py-1.5 text-xs font-semibold text-ink shadow-sm outline-none"
             value={month}
             onChange={(e) => setMonth(e.target.value || monthStr())}
           />
@@ -82,7 +82,7 @@ export default function ReportsPage() {
         </div>
       </div>
 
-      <div className="px-4 pt-4">
+      <div className="px-4">
         {loading ? (
           <Loading />
         ) : !report ? (

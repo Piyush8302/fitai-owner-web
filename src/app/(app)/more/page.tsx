@@ -46,12 +46,14 @@ export default function MorePage() {
 
   return (
     <div>
-      <div className="grad-hero rounded-b-[28px] px-5 pb-6 pt-12 text-white safe-top">
+      <div className="px-5 pb-3 pt-14 safe-top">
         <div className="flex items-center gap-4">
-          <Avatar name={user?.name} size={56} />
+          <Avatar name={user?.name} size={60} />
           <div>
-            <h1 className="text-xl font-extrabold">{user?.name}</h1>
-            <p className="text-sm text-white/85">{user?.role === 'gym_staff' ? 'Staff' : 'Gym Owner'} · {user?.phone || user?.email}</p>
+            <h1 className="text-[24px] font-extrabold tracking-tight">{user?.name}</h1>
+            <p className="text-sm font-medium text-muted">
+              {user?.role === 'gym_staff' ? 'Staff' : 'Gym Owner'} · {user?.phone || user?.email}
+            </p>
           </div>
         </div>
         <div className="mt-4">
@@ -59,7 +61,7 @@ export default function MorePage() {
         </div>
       </div>
 
-      <div className="space-y-4 px-4 pt-4">
+      <div className="space-y-4 px-4">
         <InstallHint />
 
         <div className="card divide-y divide-border">

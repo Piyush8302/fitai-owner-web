@@ -83,17 +83,17 @@ function StaffDetailInner() {
 
   return (
     <div>
-      <div className="grad-4 rounded-b-[28px] px-5 pb-6 pt-12 text-white safe-top">
-        <button onClick={() => router.back()} className="mb-3 flex items-center gap-1 text-sm font-semibold text-white/90">
-          <ArrowLeft size={16} /> Back
+      <div className="px-5 pb-4 pt-14 safe-top">
+        <button onClick={() => router.back()} className="icon-btn mb-4" aria-label="Back">
+          <ArrowLeft size={18} />
         </button>
         <div className="flex items-center gap-4">
-          <Avatar src={staff.avatar} name={staff.name} size={64} />
+          <Avatar src={staff.avatar} name={staff.name} size={68} />
           <div className="min-w-0">
-            <h1 className="truncate text-xl font-extrabold">{staff.name}</h1>
-            <p className="text-sm text-white/85">{staff.staffRole || 'Staff'}</p>
+            <h1 className="truncate text-[22px] font-extrabold tracking-tight">{staff.name}</h1>
+            <p className="text-sm font-medium text-muted">{staff.staffRole || 'Staff'}</p>
             {staff.phone && (
-              <a href={`tel:${staff.phone}`} className="mt-0.5 flex items-center gap-1 text-sm text-white/85">
+              <a href={`tel:${staff.phone}`} className="mt-0.5 flex items-center gap-1 text-sm font-medium text-muted">
                 <Phone size={13} /> {staff.phone}
               </a>
             )}
@@ -101,7 +101,7 @@ function StaffDetailInner() {
         </div>
       </div>
 
-      <div className="space-y-4 px-4 pt-4">
+      <div className="space-y-4 px-4">
         <div className="card grid grid-cols-3 divide-x divide-border p-3 text-center">
           <div>
             <p className="text-lg font-extrabold text-primary">{thisMonth}</p>

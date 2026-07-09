@@ -59,12 +59,12 @@ export default function StaffPage() {
 
   return (
     <div>
-      <div className="grad-4 rounded-b-[28px] px-5 pb-5 pt-12 text-white safe-top">
+      <div className="px-5 pb-3 pt-14 safe-top">
         <div className="flex items-center justify-between">
-          <h1 className="text-xl font-extrabold">Staff</h1>
+          <h1 className="text-[26px] font-extrabold tracking-tight">Staff</h1>
           {isOwner && (
-            <button className="rounded-full bg-white/20 p-2.5" onClick={() => setShowAdd(true)} aria-label="Add staff">
-              <UserPlus size={20} />
+            <button className="icon-btn text-primary" onClick={() => setShowAdd(true)} aria-label="Add staff">
+              <UserPlus size={19} />
             </button>
           )}
         </div>
@@ -73,7 +73,7 @@ export default function StaffPage() {
         </div>
       </div>
 
-      <div className="px-4 pt-4">
+      <div className="px-4">
         {loading ? (
           <Loading />
         ) : rows.length === 0 ? (
