@@ -3,12 +3,13 @@
 import { useCallback, useEffect, useRef, useState, Suspense } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { Search, UserPlus, ChevronRight } from 'lucide-react';
+import { Search, UserPlus, CheckCircle2, IndianRupee } from 'lucide-react';
 import { api, can, fmtDate, PLANS, PLAN_LABEL, type MemberRow } from '@/lib/api';
 import { useApp } from '@/lib/store';
 import GymSwitcher from '@/components/GymSwitcher';
 import { Avatar, Modal, Loading, Empty, StatusBadge, DueBadge, Toast } from '@/components/ui';
 import PhotoPicker from '@/components/PhotoPicker';
+import PaymentModal from '@/components/PaymentModal';
 
 const STATUSES = ['all', 'active', 'inactive', 'blocked', 'left'] as const;
 
@@ -24,6 +25,8 @@ function MembersInner() {
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [showAdd, setShowAdd] = useState(params.get('add') === '1');
+  const [payFor, setPayFor] = useState<MemberRow | null>(null);
+  const [presentBusy, setPresentBusy] = useState<string | null>(null);
   const [toast, setToast] = useState<{ msg: string; error?: boolean }>({ msg: '' });
   const sentinel = useRef<HTMLDivElement>(null);
   const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -83,6 +86,21 @@ function MembersInner() {
     searchTimer.current = setTimeout(() => load(1, false, v, status), 400);
   };
 
+  // Quick action: mark today's attendance straight from the list (like the app).
+  const markPresent = async (m: MemberRow) => {
+    if (presentBusy) return;
+    setPresentBusy(m._id);
+    const res = await api.post('/api/gym/attendance', { gymId: m.gym?._id || gymId, userId: m.user._id });
+    setPresentBusy(null);
+    if (!res.success) return show(res.message || 'Could not mark attendance');
+    show(
+      (res as { data?: { duplicate?: boolean } }).data?.duplicate
+        ? 'Already checked in today'
+        : `${m.user?.name} marked present ✅`,
+      false
+    );
+  };
+
   useEffect(() => {
     const el = sentinel.current;
     if (!el) return;
@@ -134,30 +152,63 @@ function MembersInner() {
         ) : (
           <div className="card divide-y divide-border">
             {rows.map((m) => (
-              <Link
-                key={m._id}
-                href={`/members/${m._id}?g=${m.gym?._id || gymId}`}
-                className="flex items-center gap-3 p-3"
-              >
-                <Avatar src={m.user?.avatar} name={m.user?.name} size={44} />
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-semibold">{m.user?.name}</p>
-                  <p className="text-xs text-muted">
-                    {PLAN_LABEL[m.plan] || m.plan} · Due {fmtDate(m.dueDate)}
-                    {gymId === 'all' && m.gym ? ` · ${m.gym.name}` : ''}
-                  </p>
-                </div>
-                <div className="flex flex-col items-end gap-1">
-                  {m.status !== 'active' ? <StatusBadge status={m.status} /> : <DueBadge isDue={m.isDue} />}
-                  <ChevronRight size={16} className="text-muted" />
-                </div>
-              </Link>
+              <div key={m._id} className="flex items-center gap-2 p-3">
+                <Link
+                  href={`/members/${m._id}?g=${m.gym?._id || gymId}`}
+                  className="flex min-w-0 flex-1 items-center gap-3"
+                >
+                  <Avatar src={m.user?.avatar} name={m.user?.name} size={44} />
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-semibold">{m.user?.name}</p>
+                    <p className="truncate text-xs text-muted">
+                      {PLAN_LABEL[m.plan] || m.plan} · Due {fmtDate(m.dueDate)}
+                      {gymId === 'all' && m.gym ? ` · ${m.gym.name}` : ''}
+                    </p>
+                    <div className="mt-0.5">
+                      {m.status !== 'active' ? <StatusBadge status={m.status} /> : <DueBadge isDue={m.isDue} />}
+                    </div>
+                  </div>
+                </Link>
+                {can(user, 'canMarkPresent') && (
+                  <button
+                    onClick={() => markPresent(m)}
+                    disabled={presentBusy === m._id}
+                    aria-label={`Mark ${m.user?.name} present`}
+                    className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-success/12 text-success transition-transform active:scale-90 disabled:opacity-50"
+                  >
+                    <CheckCircle2 size={18} />
+                  </button>
+                )}
+                {can(user, 'canMarkPayment') && (
+                  <button
+                    onClick={() => setPayFor(m)}
+                    aria-label={`Mark payment for ${m.user?.name}`}
+                    className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/12 text-primary transition-transform active:scale-90"
+                  >
+                    <IndianRupee size={17} />
+                  </button>
+                )}
+              </div>
             ))}
           </div>
         )}
         <div ref={sentinel} />
         {loadingMore && <Loading />}
       </div>
+
+      {payFor && (
+        <PaymentModal
+          open={!!payFor}
+          onClose={() => setPayFor(null)}
+          membership={payFor}
+          planPrices={gym?.planPrices || gyms[0]?.planPrices}
+          onDone={(msg) => {
+            show(msg, false);
+            load(1, false, search, status);
+          }}
+          onError={show}
+        />
+      )}
 
       <AddMemberModal
         open={showAdd}
