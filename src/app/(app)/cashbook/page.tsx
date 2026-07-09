@@ -57,7 +57,7 @@ export default function CashbookPage() {
 
   return (
     <div>
-      <div className="px-5 pb-3 pt-14 safe-top">
+      <div className="sticky top-0 z-30 border-b border-border/70 bg-bg/85 px-5 pb-3 pt-14 backdrop-blur-xl safe-top">
         <div className="flex items-center justify-between">
           <h1 className="text-[26px] font-extrabold tracking-tight">Cashbook</h1>
           <input

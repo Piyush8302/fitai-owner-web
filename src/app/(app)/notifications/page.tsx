@@ -58,7 +58,7 @@ export default function NotificationsPage() {
 
   return (
     <div>
-      <div className="px-5 pb-3 pt-14 safe-top">
+      <div className="sticky top-0 z-30 border-b border-border/70 bg-bg/85 px-5 pb-3 pt-14 backdrop-blur-xl safe-top">
         <button onClick={() => router.back()} className="icon-btn mb-4" aria-label="Back">
           <ArrowLeft size={18} />
         </button>

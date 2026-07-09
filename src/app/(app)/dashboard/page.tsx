@@ -57,7 +57,7 @@ export default function DashboardPage() {
 
   return (
     <div>
-      <div className="px-5 pb-2 pt-14 safe-top">
+      <div className="sticky top-0 z-30 border-b border-border/70 bg-bg/85 px-5 pb-3 pt-14 backdrop-blur-xl safe-top">
         <div className="flex items-center justify-between">
           <div>
             <p className="text-[13px] font-medium text-muted">Welcome back 👋</p>

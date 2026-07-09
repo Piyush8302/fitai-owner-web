@@ -63,7 +63,7 @@ export default function FeesPage() {
 
   return (
     <div>
-      <div className="px-5 pb-3 pt-14 safe-top">
+      <div className="sticky top-0 z-30 border-b border-border/70 bg-bg/85 px-5 pb-3 pt-14 backdrop-blur-xl safe-top">
         <h1 className="text-[26px] font-extrabold tracking-tight">Fees</h1>
         <div className="mt-3">
           <GymSwitcher allowAll={false} />
