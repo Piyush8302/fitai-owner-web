@@ -23,6 +23,7 @@ export default function PaymentModal({
 }) {
   const [plan, setPlan] = useState(membership.plan || 'monthly');
   const [amount, setAmount] = useState(String(membership.fee || ''));
+  const [method, setMethod] = useState<'cash' | 'online'>('cash');
   const [dueDate, setDueDate] = useState('');
   const [busy, setBusy] = useState(false);
 
@@ -30,6 +31,7 @@ export default function PaymentModal({
     if (!open) return;
     setPlan(membership.plan || 'monthly');
     setAmount(String(membership.fee || ''));
+    setMethod('cash');
     setDueDate('');
   }, [open, membership]);
 
@@ -45,6 +47,7 @@ export default function PaymentModal({
       membershipId: membership._id,
       amount: Number(amount),
       plan,
+      method,
       dueDate: dueDate || undefined,
       allowRenew,
     });
@@ -78,6 +81,20 @@ export default function PaymentModal({
           value={amount}
           onChange={(e) => setAmount(e.target.value)}
         />
+        <div>
+          <label className="mb-1.5 block text-xs font-semibold text-muted">Paid by</label>
+          <div className="flex gap-2">
+            {(['cash', 'online'] as const).map((m) => (
+              <button
+                key={m}
+                className={`chip flex-1 justify-center ${method === m ? 'chip-active' : ''}`}
+                onClick={() => setMethod(m)}
+              >
+                {m === 'cash' ? '💵 Cash' : '📲 Online'}
+              </button>
+            ))}
+          </div>
+        </div>
         <div>
           <label className="mb-1 block text-xs font-semibold text-muted">Custom next due date (optional)</label>
           <input className="input" type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} />

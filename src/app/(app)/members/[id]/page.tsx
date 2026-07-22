@@ -12,7 +12,7 @@ import PaymentModal from '@/components/PaymentModal';
 type Detail = {
   membership: MemberRow;
   attendance: { _id: string; day: string; checkInAt: string; method: string }[];
-  payments: { _id: string; amount: number; plan: string; paidDate: string; periodMonths?: number }[];
+  payments: { _id: string; amount: number; plan: string; paidDate: string; periodMonths?: number; method?: 'cash' | 'online' }[];
   thisMonth: number;
   totalPaid: number;
   totalCheckins: number;
@@ -164,7 +164,10 @@ function MemberDetailInner() {
                 <div key={p._id} className="flex items-center justify-between p-3 text-sm">
                   <div>
                     <p className="font-semibold">{fmtMoney(p.amount)}</p>
-                    <p className="text-xs text-muted">{PLAN_LABEL[p.plan] || p.plan}</p>
+                    <p className="text-xs text-muted">
+                      {PLAN_LABEL[p.plan] || p.plan}
+                      {p.method ? ` · ${p.method === 'online' ? '📲 Online' : '💵 Cash'}` : ''}
+                    </p>
                   </div>
                   <span className="text-xs text-muted">{fmtDate(p.paidDate)}</span>
                 </div>

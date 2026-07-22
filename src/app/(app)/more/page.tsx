@@ -11,6 +11,7 @@ import {
   BellRing,
   LogOut,
   ChevronRight,
+  PlusCircle,
 } from 'lucide-react';
 import { api, can, type Gym } from '@/lib/api';
 import { useApp } from '@/lib/store';
@@ -24,6 +25,7 @@ export default function MorePage() {
   const { user, gym, gymId, gyms, setGymId, logout, refreshGyms } = useApp();
   const [qrOpen, setQrOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
+  const [createOpen, setCreateOpen] = useState(false);
   const [toast, setToast] = useState<{ msg: string; error?: boolean }>({ msg: '' });
   const [pushBusy, setPushBusy] = useState(false);
 
@@ -67,6 +69,8 @@ export default function MorePage() {
         <div className="card divide-y divide-border">
           <MenuBtn icon={QrCode} label="Gym Wall QR (check-in)" onClick={() => setQrOpen(true)} />
           {can(user, 'canEditGym') && <MenuBtn icon={Pencil} label="Edit Gym (hours, fees, details)" onClick={() => setEditOpen(true)} />}
+          {/* Creating a gym is owner-only on the backend (ownerOnly guard) */}
+          {isOwner && <MenuBtn icon={PlusCircle} label="Create New Gym (branch)" onClick={() => setCreateOpen(true)} />}
           <MenuBtn
             icon={BellRing}
             label={pushBusy ? 'Enabling…' : 'Enable Push Notifications'}
@@ -98,6 +102,18 @@ export default function MorePage() {
       </div>
 
       {gym && <QrModal open={qrOpen} onClose={() => setQrOpen(false)} gym={gym} />}
+      <CreateGymModal
+        open={createOpen}
+        onClose={() => setCreateOpen(false)}
+        needsPhone={!user?.phone}
+        onDone={async (newGym) => {
+          setCreateOpen(false);
+          show(`${newGym.name} created ✅`, false);
+          await refreshGyms();
+          setGymId(newGym._id); // switch straight to the new branch
+        }}
+        onError={show}
+      />
       {gym && (
         <EditGymModal
           open={editOpen}
@@ -125,6 +141,113 @@ function MenuBtn({ icon: Icon, label, onClick }: { icon: React.ElementType; labe
       <span className="flex-1 text-sm font-semibold">{label}</span>
       <ChevronRight size={16} className="text-muted" />
     </button>
+  );
+}
+
+// Create another gym/branch — mirrors the mobile app's "Create Gym" form.
+// Fee plans aren't asked here; the owner sets them afterwards in Edit Gym.
+function CreateGymModal({
+  open,
+  onClose,
+  needsPhone,
+  onDone,
+  onError,
+}: {
+  open: boolean;
+  onClose: () => void;
+  needsPhone: boolean;
+  onDone: (gym: Gym) => void;
+  onError: (m: string) => void;
+}) {
+  const [name, setName] = useState('');
+  const [location, setLocation] = useState('');
+  const [phone, setPhone] = useState('');
+  const [ownerPhone, setOwnerPhone] = useState('');
+  const [slots, setSlots] = useState<{ open: string; close: string }[]>([]);
+  const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    if (!open) return;
+    setName('');
+    setLocation('');
+    setPhone('');
+    setOwnerPhone('');
+    setSlots([]);
+  }, [open]);
+
+  const save = async () => {
+    if (!name.trim()) return onError('Enter the gym name');
+    // The backend needs a mobile number on the owner's account before it will
+    // create a gym — ask for it here when the account was made with an email.
+    if (needsPhone && ownerPhone.replace(/\D/g, '').length < 10)
+      return onError('Enter your 10-digit mobile number');
+    for (const s of slots) if (!s.open || !s.close) return onError('Fill open & close time for every slot');
+    setBusy(true);
+    const res = await api.post<Gym>('/api/gym', {
+      name: name.trim(),
+      location: location.trim(),
+      phone: phone.trim(),
+      ownerPhone: ownerPhone.replace(/\D/g, '') || undefined,
+      slots,
+    });
+    setBusy(false);
+    if (!res.success || !res.data) return onError(res.message || 'Could not create gym');
+    onDone(res.data);
+  };
+
+  return (
+    <Modal open={open} onClose={onClose} title="Create New Gym">
+      <div className="space-y-3">
+        <input className="input" placeholder="Gym name" value={name} onChange={(e) => setName(e.target.value)} />
+        <input className="input" placeholder="Location / area" value={location} onChange={(e) => setLocation(e.target.value)} />
+        <input className="input" placeholder="Gym phone (optional)" type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} />
+        {needsPhone && (
+          <div>
+            <input
+              className="input"
+              placeholder="Your mobile number"
+              type="tel"
+              inputMode="numeric"
+              value={ownerPhone}
+              onChange={(e) => setOwnerPhone(e.target.value)}
+            />
+            <p className="mt-1 text-[11px] text-muted">Required — you&apos;ll use this number to log in.</p>
+          </div>
+        )}
+
+        <div>
+          <p className="mb-1.5 text-xs font-bold text-muted">GYM HOURS (empty = open 24×7)</p>
+          {slots.map((s, i) => (
+            <div key={i} className="mb-2 flex items-center gap-2">
+              <input
+                className="input flex-1"
+                type="time"
+                value={s.open}
+                onChange={(e) => setSlots(slots.map((x, j) => (j === i ? { ...x, open: e.target.value } : x)))}
+              />
+              <span className="text-xs text-muted">to</span>
+              <input
+                className="input flex-1"
+                type="time"
+                value={s.close}
+                onChange={(e) => setSlots(slots.map((x, j) => (j === i ? { ...x, close: e.target.value } : x)))}
+              />
+              <button className="text-error text-xs font-bold" onClick={() => setSlots(slots.filter((_, j) => j !== i))}>
+                ✕
+              </button>
+            </div>
+          ))}
+          <button className="chip" onClick={() => setSlots([...slots, { open: '', close: '' }])}>
+            + Add slot
+          </button>
+        </div>
+
+        <p className="text-[11px] text-muted">Fee plans can be set afterwards from Edit Gym.</p>
+        <button className="btn" onClick={save} disabled={busy}>
+          {busy ? 'Creating…' : 'Create Gym'}
+        </button>
+      </div>
+    </Modal>
   );
 }
 

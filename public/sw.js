@@ -28,8 +28,11 @@ self.addEventListener('push', (event) => {
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
   const d = event.notification.data || {};
-  // Deep-link to the member when the payload carries one (same as app push taps).
-  const url = d.membershipId && d.gymId ? `/members/${d.membershipId}?g=${d.gymId}` : '/dashboard';
+  // Deep-link to the source (same as app push taps): member detail when the
+  // payload carries one, fees list for unpaid-fee digests, dashboard otherwise.
+  let url = '/dashboard';
+  if (d.membershipId && d.gymId) url = `/members/${d.membershipId}?g=${d.gymId}`;
+  else if (d.screen === 'GymFees') url = '/fees';
   event.waitUntil(
     self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((wins) => {
       for (const w of wins) {
