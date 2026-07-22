@@ -13,6 +13,7 @@ type Entry = {
   amount: number;
   description?: string;
   source?: string;
+  method?: 'cash' | 'online';
   date: string;
   gym?: { name?: string };
 };
@@ -134,16 +135,23 @@ export default function CashbookPage() {
                   <p className="text-xs text-muted">
                     {fmtDate(e.date)}
                     {e.gym?.name ? ` · ${e.gym.name}` : ''}
+                    {e.method ? ` · ${e.method === 'online' ? '📲 Online' : '💵 Cash'}` : ''}
                   </p>
                 </div>
                 <span className={`text-sm font-bold ${e.type === 'income' ? 'text-success' : 'text-error'}`}>
                   {e.type === 'income' ? '+' : '−'}
                   {fmtMoney(e.amount)}
                 </span>
-                {e.source !== 'membership' && gymId !== 'all' && (
+                {can(user, 'canAccessCashbook') && (
                   <button
                     onClick={async () => {
-                      if (!confirm('Delete this entry?')) return;
+                      // Membership rows mirror a real payment — deleting only removes
+                      // the ledger line, it does NOT undo the payment or the due date.
+                      const warn =
+                        e.source === 'membership'
+                          ? 'This entry came from a member payment.\n\nDeleting it only removes it from the cashbook — the payment and the member\'s due date stay as they are.\n\nDelete anyway?'
+                          : 'Delete this entry?';
+                      if (!confirm(warn)) return;
                       const res = await api.del(`/api/gym/cashbook/${e._id}`);
                       if (!res.success) return show(res.message || 'Delete failed');
                       load();
