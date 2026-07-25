@@ -9,10 +9,17 @@ import { Toast } from '@/components/ui';
 
 type Step = 'id' | 'otp';
 
+// Owners can log in with the phone OR the email they registered with. An input
+// containing "@" is treated as an email; otherwise it's cleaned to a 10-digit phone.
+const isEmail = (s: string) => s.includes('@');
+// The payload for owner-status / send-otp / verify-otp: { email } or { phone }.
+const idPayload = (id: string) =>
+  isEmail(id) ? { email: id.trim().toLowerCase() } : { phone: id.replace(/\D/g, '') };
+
 export default function LoginPage() {
   const router = useRouter();
   const [step, setStep] = useState<Step>('id');
-  const [phone, setPhone] = useState('');
+  const [loginId, setLoginId] = useState(''); // phone or email
   const [otp, setOtp] = useState('');
   const [busy, setBusy] = useState(false);
   const [toast, setToast] = useState<{ msg: string; error?: boolean }>({ msg: '' });
@@ -28,7 +35,7 @@ export default function LoginPage() {
     // (it survives history/cache wipes) — or at least prefill the number.
     restoreLoginSilently().then((r) => {
       if (r === 'restored') router.replace('/dashboard');
-      else if (r) setPhone(r);
+      else if (r) setLoginId(r);
     });
   }, [router]);
 
@@ -44,7 +51,7 @@ export default function LoginPage() {
   };
 
   const sendOtp = async () => {
-    const res = await api.post('/api/auth/send-otp', { phone });
+    const res = await api.post('/api/auth/send-otp', idPayload(loginId));
     if (!res.success) {
       show(res.message || 'Could not send OTP');
       return false;
@@ -53,12 +60,14 @@ export default function LoginPage() {
     return true;
   };
 
+  const idValid = () => (isEmail(loginId) ? /^\S+@\S+\.\S+$/.test(loginId.trim()) : loginId.replace(/\D/g, '').length === 10);
+
   const handleContinue = async () => {
     if (busy) return;
-    if (phone.length !== 10) return show('Enter a valid 10-digit mobile number');
+    if (!idValid()) return show('Enter a valid mobile number or email');
     setBusy(true);
     // Same gating as the app's Admin chip: only approved owners/staff proceed.
-    const st = await api.post<{ status?: string }>('/api/auth/owner-status', { phone });
+    const st = await api.post<{ status?: string }>('/api/auth/owner-status', idPayload(loginId));
     const status = (st as { status?: string }).status;
     if (!st.success) {
       setBusy(false);
@@ -68,7 +77,7 @@ export default function LoginPage() {
       setBusy(false);
       if (status === 'pending') return show('Your gym-owner request is still pending approval.');
       if (status === 'rejected') return show('Your owner request was rejected. Please contact support.');
-      return show('This number is not an approved gym owner/staff. Register your gym in the FitAI app first.');
+      return show('This account is not an approved gym owner/staff. Register your gym in the FitAI app first.');
     }
     if (await sendOtp()) setStep('otp');
     setBusy(false);
@@ -77,7 +86,7 @@ export default function LoginPage() {
   const verify = async (code: string) => {
     if (busy) return;
     setBusy(true);
-    const res = await api.post('/api/auth/verify-otp', { phone, otp: code });
+    const res = await api.post('/api/auth/verify-otp', { ...idPayload(loginId), otp: code });
     const token = (res as { token?: string }).token;
     const user = (res as { user?: AuthUser }).user;
     if (!res.success || !token || !user) {
@@ -93,7 +102,7 @@ export default function LoginPage() {
     saveAuth(token, user);
     // Back the session up in the password manager so a history/data clear
     // doesn't force a fresh OTP next time.
-    await storeLoginCredential(phone, token, user.name);
+    await storeLoginCredential(loginId, token, user.name);
     router.replace('/dashboard');
   };
 
@@ -119,18 +128,22 @@ export default function LoginPage() {
       <div>
         {step === 'id' ? (
           <>
-            <label className="mb-1.5 block text-xs font-bold text-muted">MOBILE NUMBER</label>
+            <label className="mb-1.5 block text-xs font-bold text-muted">MOBILE NUMBER OR EMAIL</label>
             <input
               className="input"
-              type="tel"
-              inputMode="numeric"
-              placeholder="10-digit mobile number"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
-              maxLength={10}
+              type="text"
+              inputMode="email"
+              placeholder="Mobile number or email"
+              value={loginId}
+              // Keep digits-only while it looks like a phone; allow full text once
+              // the owner starts typing an email.
+              onChange={(e) => {
+                const v = e.target.value;
+                setLoginId(v.includes('@') || /[a-zA-Z]/.test(v) ? v : v.replace(/\D/g, '').slice(0, 10));
+              }}
               autoFocus
             />
-            <button className="btn mt-5" onClick={handleContinue} disabled={busy || phone.length !== 10}>
+            <button className="btn mt-5" onClick={handleContinue} disabled={busy || !idValid()}>
               {busy ? 'Checking…' : 'Send OTP'}
             </button>
             <p className="mt-6 text-center text-xs text-muted">
@@ -148,10 +161,10 @@ export default function LoginPage() {
                 setOtp('');
               }}
             >
-              <ArrowLeft size={16} /> Change number
+              <ArrowLeft size={16} /> Change
             </button>
             <p className="mb-3 text-sm text-ink-2">
-              OTP sent to <b>{phone}</b>
+              OTP sent to <b>{loginId}</b>
             </p>
             <input
               className="input text-center text-2xl tracking-[0.5em] font-bold"
