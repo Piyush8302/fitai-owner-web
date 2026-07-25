@@ -19,7 +19,7 @@ const istDay = () => {
 };
 
 export default function DashboardPage() {
-  const { user, gymId, gym, gyms, unread } = useApp();
+  const { user, gymId, gym, gyms, unread, ready } = useApp();
   const [stats, setStats] = useState<Stats | null>(null);
   const [today, setToday] = useState<AttRow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -27,7 +27,9 @@ export default function DashboardPage() {
   const qrGym = gym || gyms[0] || null;
 
   const load = useCallback(async () => {
-    if (!gymId) return;
+    // No gym selected (e.g. an approved owner whose gyms live on another
+    // account) — stop loading instead of spinning forever, and clear stats.
+    if (!gymId) { setStats(null); setToday([]); setLoading(false); return; }
     setLoading(true);
     if (gymId === 'all') {
       const res = await api.get<Stats>('/api/gym/all/dashboard');
@@ -79,6 +81,20 @@ export default function DashboardPage() {
 
       <div className="px-4 pt-3">
         <InstallHint />
+
+        {/* Approved owner/staff, but no gym is linked to THIS account. Common when
+            someone logs in with an email/number that differs from the one their
+            gym is registered under — show a clear message, not a dead dashboard. */}
+        {ready && gyms.length === 0 ? (
+          <div className="card mt-2 p-5 text-center">
+            <p className="text-base font-bold">No gym linked to this account</p>
+            <p className="mt-1.5 text-sm text-muted">
+              You&apos;re logged in as <b>{user?.email || user?.phone}</b>, but no gym is registered under it.
+              If you have a gym, log in with the exact mobile number or email you registered it with — or contact support.
+            </p>
+          </div>
+        ) : (
+        <>
         <div className="grid grid-cols-2 gap-3">
           {tiles.map((t) => {
             const Icon = t.icon;
@@ -135,6 +151,8 @@ export default function DashboardPage() {
               </div>
             )}
           </div>
+        )}
+        </>
         )}
       </div>
       {qrGym && <QrModal open={qrOpen} onClose={() => setQrOpen(false)} gym={qrGym} />}
