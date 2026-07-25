@@ -2,13 +2,14 @@
 
 import { useCallback, useEffect, useState, Suspense } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
-import { ArrowLeft, Trash2, Phone } from 'lucide-react';
+import { ArrowLeft, Trash2, Phone, Pencil, Store } from 'lucide-react';
 import { api, fmtDate, fmtMoney, fmtTime } from '@/lib/api';
 import { useApp } from '@/lib/store';
-import { Avatar, Loading, Empty, Toast, StatusBadge } from '@/components/ui';
+import { Avatar, Loading, Empty, Toast, StatusBadge, Modal } from '@/components/ui';
 import type { StaffRow } from '../page';
 
 type FullStaff = StaffRow & {
+  gymCount?: number;
   staffJoinDate?: string;
   canAccessCashbook?: boolean;
   canAccessReports?: boolean;
@@ -46,6 +47,7 @@ function StaffDetailInner() {
   const [att, setAtt] = useState<Att[]>([]);
   const [thisMonth, setThisMonth] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [editOpen, setEditOpen] = useState(false);
   const [toast, setToast] = useState<{ msg: string; error?: boolean }>({ msg: '' });
 
   const show = (msg: string, error = true) => {
@@ -89,7 +91,7 @@ function StaffDetailInner() {
         </button>
         <div className="flex items-center gap-4">
           <Avatar src={staff.avatar} name={staff.name} size={68} />
-          <div className="min-w-0">
+          <div className="min-w-0 flex-1">
             <h1 className="truncate text-[22px] font-extrabold tracking-tight">{staff.name}</h1>
             <p className="text-sm font-medium text-muted">{staff.staffRole || 'Staff'}</p>
             {staff.phone && (
@@ -97,7 +99,15 @@ function StaffDetailInner() {
                 <Phone size={13} /> {staff.phone}
               </a>
             )}
+            {(staff.gymCount ?? 1) > 1 && (
+              <p className="mt-0.5 flex items-center gap-1 text-xs font-medium text-primary">
+                <Store size={12} /> Works at {staff.gymCount} of your gyms
+              </p>
+            )}
           </div>
+          <button className="icon-btn text-primary" onClick={() => setEditOpen(true)} aria-label="Edit details">
+            <Pencil size={18} />
+          </button>
         </div>
       </div>
 
@@ -180,16 +190,75 @@ function StaffDetailInner() {
         <button
           className="btn btn-danger"
           onClick={async () => {
-            if (!confirm(`Remove ${staff.name} from staff? Their account becomes a normal user.`)) return;
-            const res = await api.del(`/api/gym/staff/${id}`);
+            const multi = (staff.gymCount ?? 1) > 1;
+            const msg = multi
+              ? `Remove ${staff.name} from THIS gym? They'll stay staff at your other gym(s).`
+              : `Remove ${staff.name} from staff? Their account becomes a normal user.`;
+            if (!confirm(msg)) return;
+            // Pass the gym so a multi-gym staff is removed from this branch only.
+            const res = await api.del(`/api/gym/staff/${id}?gymId=${gymId}`);
             if (!res.success) return show(res.message || 'Remove failed');
             router.replace('/staff');
           }}
         >
-          <Trash2 size={17} /> Remove Staff
+          <Trash2 size={17} /> Remove Staff{(staff.gymCount ?? 1) > 1 ? ' from this gym' : ''}
         </button>
       </div>
+
+      <Modal open={editOpen} onClose={() => setEditOpen(false)} title="Edit staff details">
+        <EditStaffForm
+          staff={staff}
+          onDone={(msg) => { setEditOpen(false); show(msg, false); load(); }}
+          onError={(m) => show(m)}
+          onSubmit={async (patch) => api.put(`/api/gym/staff/${id}`, patch)}
+        />
+      </Modal>
       <Toast msg={toast.msg} error={toast.error} />
+    </div>
+  );
+}
+
+function EditStaffForm({
+  staff,
+  onDone,
+  onError,
+  onSubmit,
+}: {
+  staff: FullStaff;
+  onDone: (msg: string) => void;
+  onError: (m: string) => void;
+  onSubmit: (patch: Record<string, unknown>) => Promise<{ success: boolean; message?: string }>;
+}) {
+  const [name, setName] = useState(staff.name || '');
+  const [role, setRole] = useState(staff.staffRole || '');
+  const [salary, setSalary] = useState(staff.staffSalary != null ? String(staff.staffSalary) : '');
+  const [busy, setBusy] = useState(false);
+  return (
+    <div className="space-y-3">
+      <input className="input" placeholder="Name" value={name} onChange={(e) => setName(e.target.value)} />
+      <input className="input" placeholder="Role (e.g. Trainer, Receptionist)" value={role} onChange={(e) => setRole(e.target.value)} />
+      <input
+        className="input"
+        placeholder="Monthly salary (₹, optional)"
+        type="number"
+        inputMode="numeric"
+        value={salary}
+        onChange={(e) => setSalary(e.target.value)}
+      />
+      <button
+        className="btn"
+        disabled={busy}
+        onClick={async () => {
+          if (!name.trim()) return onError('Enter the staff name');
+          setBusy(true);
+          const res = await onSubmit({ name: name.trim(), staffRole: role.trim(), salary: salary === '' ? '' : Number(salary) });
+          setBusy(false);
+          if (!res.success) return onError(res.message || 'Update failed');
+          onDone('Details updated ✅');
+        }}
+      >
+        {busy ? 'Saving…' : 'Save Changes'}
+      </button>
     </div>
   );
 }
