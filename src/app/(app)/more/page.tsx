@@ -12,6 +12,7 @@ import {
   LogOut,
   ChevronRight,
   PlusCircle,
+  UserCog,
 } from 'lucide-react';
 import { api, can, type Gym } from '@/lib/api';
 import { useApp } from '@/lib/store';
@@ -26,6 +27,7 @@ export default function MorePage() {
   const [qrOpen, setQrOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
+  const [changeOpen, setChangeOpen] = useState(false);
   const [toast, setToast] = useState<{ msg: string; error?: boolean }>({ msg: '' });
   const [pushBusy, setPushBusy] = useState(false);
 
@@ -81,6 +83,8 @@ export default function MorePage() {
               show(r.message, !r.ok);
             }}
           />
+          {/* Contact changes are applied by the super-admin, so this is a request */}
+          <MenuBtn icon={UserCog} label="Request email / phone change" onClick={() => setChangeOpen(true)} />
         </div>
 
         <div className="card divide-y divide-border">
@@ -102,6 +106,14 @@ export default function MorePage() {
       </div>
 
       {gym && <QrModal open={qrOpen} onClose={() => setQrOpen(false)} gym={gym} />}
+      <ChangeRequestModal
+        open={changeOpen}
+        onClose={() => setChangeOpen(false)}
+        currentEmail={user?.email}
+        currentPhone={user?.phone}
+        onDone={() => { setChangeOpen(false); show('Request sent ✅ — our team will review it.', false); }}
+        onError={show}
+      />
       <CreateGymModal
         open={createOpen}
         onClose={() => setCreateOpen(false)}
@@ -141,6 +153,68 @@ function MenuBtn({ icon: Icon, label, onClick }: { icon: React.ElementType; labe
       <span className="flex-1 text-sm font-semibold">{label}</span>
       <ChevronRight size={16} className="text-muted" />
     </button>
+  );
+}
+
+// Owners/staff can't self-change their email/phone (security) — they send a
+// request that the super-admin applies from the admin panel's Support section.
+function ChangeRequestModal({
+  open,
+  onClose,
+  currentEmail,
+  currentPhone,
+  onDone,
+  onError,
+}: {
+  open: boolean;
+  onClose: () => void;
+  currentEmail?: string;
+  currentPhone?: string;
+  onDone: () => void;
+  onError: (m: string) => void;
+}) {
+  const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
+  const [note, setNote] = useState('');
+  const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    if (!open) return;
+    setEmail('');
+    setPhone('');
+    setNote('');
+  }, [open]);
+
+  const submit = async () => {
+    if (!email.trim() && !phone.trim()) return onError('Enter a new email or phone to request');
+    setBusy(true);
+    const parts = [];
+    if (email.trim()) parts.push(`new email: ${email.trim()}`);
+    if (phone.trim()) parts.push(`new phone: ${phone.trim()}`);
+    if (note.trim()) parts.push(`note: ${note.trim()}`);
+    // "change request" wording lets the admin panel tag it and offer the apply editor.
+    const message = `[Profile change request] Please update my contact — ${parts.join(', ')}. (current: ${currentEmail || '—'} / ${currentPhone || '—'})`;
+    const res = await api.post('/api/support', { message });
+    setBusy(false);
+    if (!res.success) return onError(res.message || 'Could not send request');
+    onDone();
+  };
+
+  return (
+    <Modal open={open} onClose={onClose} title="Request email / phone change">
+      <div className="space-y-3">
+        <p className="text-xs text-muted">
+          For security you can&apos;t change these yourself. Send a request and our team will update it.
+          Current: <b>{currentEmail || '—'}</b> / <b>{currentPhone || '—'}</b>
+        </p>
+        <input className="input" placeholder="New email (optional)" type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+        <input className="input" placeholder="New phone (optional)" type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} />
+        <textarea className="input" placeholder="Any note (optional)" rows={2} value={note} onChange={(e) => setNote(e.target.value)} />
+        <button className="btn" onClick={submit} disabled={busy}>
+          {busy ? 'Sending…' : 'Send request'}
+        </button>
+      </div>
+    </Modal>
   );
 }
 

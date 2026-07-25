@@ -17,6 +17,7 @@ export type StaffRow = {
   staffRole?: string;
   staffSalary?: number;
   staffStatus?: string;
+  gymCount?: number; // how many of the owner's gyms this staff works at
   presentToday?: boolean;
   monthCount?: number;
 };
@@ -88,6 +89,7 @@ export default function StaffPage() {
                     <p className="truncate text-sm font-semibold">{s.name}</p>
                     <p className="text-xs text-muted">
                       {s.staffRole || 'Staff'} · {s.monthCount ?? 0} days this month
+                      {(s.gymCount ?? 1) > 1 ? ` · ${s.gymCount} gyms` : ''}
                     </p>
                     {s.staffStatus && s.staffStatus !== 'active' && <StatusBadge status={s.staffStatus} />}
                   </div>
