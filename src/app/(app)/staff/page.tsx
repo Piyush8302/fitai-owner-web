@@ -13,6 +13,7 @@ export type StaffRow = {
   _id: string;
   name: string;
   phone?: string;
+  email?: string;
   avatar?: string;
   staffRole?: string;
   staffSalary?: number;
@@ -131,6 +132,7 @@ export default function StaffPage() {
 function AddStaffForm({ gymId, onDone, onError }: { gymId: string; onDone: () => void; onError: (m: string) => void }) {
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
+  const [email, setEmail] = useState('');
   const [role, setRole] = useState('');
   const [salary, setSalary] = useState('');
   const [avatar, setAvatar] = useState('');
@@ -148,6 +150,11 @@ function AddStaffForm({ gymId, onDone, onError }: { gymId: string; onDone: () =>
         onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
         maxLength={10}
       />
+      {/* Required — staff can log in with their email too */}
+      <div>
+        <input className="input" placeholder="Email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+        <p className="mt-1 text-[11px] text-muted">Required — they can log in with this email or their phone.</p>
+      </div>
       <input className="input" placeholder="Role (e.g. Trainer, Receptionist)" value={role} onChange={(e) => setRole(e.target.value)} />
       <input
         className="input"
@@ -164,11 +171,13 @@ function AddStaffForm({ gymId, onDone, onError }: { gymId: string; onDone: () =>
           const cleanPhone = phone.replace(/\D/g, '');
           if (!name.trim()) return onError('Enter staff name');
           if (cleanPhone.length !== 10) return onError('Enter a valid 10-digit phone number');
+          if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) return onError('Enter a valid email address');
           setBusy(true);
           const res = await api.post('/api/gym/staff', {
             gymId,
             name: name.trim(),
             phone: cleanPhone,
+            email: email.trim().toLowerCase(),
             staffRole: role.trim() || undefined,
             salary: salary ? Number(salary) : undefined,
             avatar: avatar || undefined,

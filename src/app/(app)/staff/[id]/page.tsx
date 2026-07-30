@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState, Suspense } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
-import { ArrowLeft, Trash2, Phone, Pencil, Store } from 'lucide-react';
+import { ArrowLeft, Trash2, Phone, Pencil, Store, Mail } from 'lucide-react';
 import { api, fmtDate, fmtMoney, fmtTime } from '@/lib/api';
 import { useApp } from '@/lib/store';
 import { Avatar, Loading, Empty, Toast, StatusBadge, Modal } from '@/components/ui';
@@ -97,6 +97,11 @@ function StaffDetailInner() {
             {staff.phone && (
               <a href={`tel:${staff.phone}`} className="mt-0.5 flex items-center gap-1 text-sm font-medium text-muted">
                 <Phone size={13} /> {staff.phone}
+              </a>
+            )}
+            {staff.email && (
+              <a href={`mailto:${staff.email}`} className="mt-0.5 flex items-center gap-1 truncate text-sm font-medium text-muted">
+                <Mail size={13} className="shrink-0" /> <span className="truncate">{staff.email}</span>
               </a>
             )}
             {(staff.gymCount ?? 1) > 1 && (
@@ -230,12 +235,17 @@ function EditStaffForm({
   onSubmit: (patch: Record<string, unknown>) => Promise<{ success: boolean; message?: string }>;
 }) {
   const [name, setName] = useState(staff.name || '');
+  const [email, setEmail] = useState(staff.email || '');
   const [role, setRole] = useState(staff.staffRole || '');
   const [salary, setSalary] = useState(staff.staffSalary != null ? String(staff.staffSalary) : '');
   const [busy, setBusy] = useState(false);
   return (
     <div className="space-y-3">
       <input className="input" placeholder="Name" value={name} onChange={(e) => setName(e.target.value)} />
+      <div>
+        <input className="input" placeholder="Email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+        <p className="mt-1 text-[11px] text-muted">They can log in with this email or their phone.</p>
+      </div>
       <input className="input" placeholder="Role (e.g. Trainer, Receptionist)" value={role} onChange={(e) => setRole(e.target.value)} />
       <input
         className="input"
@@ -250,8 +260,9 @@ function EditStaffForm({
         disabled={busy}
         onClick={async () => {
           if (!name.trim()) return onError('Enter the staff name');
+          if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) return onError('Enter a valid email address');
           setBusy(true);
-          const res = await onSubmit({ name: name.trim(), staffRole: role.trim(), salary: salary === '' ? '' : Number(salary) });
+          const res = await onSubmit({ name: name.trim(), email: email.trim().toLowerCase(), staffRole: role.trim(), salary: salary === '' ? '' : Number(salary) });
           setBusy(false);
           if (!res.success) return onError(res.message || 'Update failed');
           onDone('Details updated ✅');
