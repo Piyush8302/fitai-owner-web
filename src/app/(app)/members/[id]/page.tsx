@@ -20,6 +20,23 @@ type Detail = {
 
 const MEMBER_STATUSES = ['active', 'inactive', 'blocked', 'left'] as const;
 
+const GENDER_LABEL: Record<string, string> = { male: 'Male', female: 'Female', other: 'Other' };
+const REGISTERED_VIA: Record<string, string> = {
+  app_scan: 'Scanned the gym QR (app)',
+  web: 'Web check-in page',
+  counter: 'Added at the counter',
+};
+const age = (dob?: string | null) => {
+  if (!dob) return null;
+  const d = new Date(dob);
+  if (isNaN(d.getTime())) return null;
+  const now = new Date();
+  let a = now.getFullYear() - d.getFullYear();
+  const mth = now.getMonth() - d.getMonth();
+  if (mth < 0 || (mth === 0 && now.getDate() < d.getDate())) a--;
+  return a >= 0 && a < 120 ? a : null;
+};
+
 function MemberDetailInner() {
   const { id } = useParams<{ id: string }>();
   const sp = useSearchParams();
@@ -129,6 +146,24 @@ function MemberDetailInner() {
           <Row label="Joined" value={fmtDate(m.joinDate)} />
           <Row label="Last Paid" value={fmtDate(m.lastPaidDate)} />
           <Row label="Next Due" value={fmtDate(m.dueDate)} strong={m.isDue} />
+        </div>
+
+        {/* What the member filled in when registering at this gym */}
+        <div className="card space-y-2 p-4 text-sm">
+          <p className="text-[11px] font-bold uppercase tracking-wide text-muted">Registration details</p>
+          <Row label="Email" value={m.user.email || m.profile?.email || '—'} />
+          {m.profile?.gender && <Row label="Gender" value={GENDER_LABEL[m.profile.gender] || m.profile.gender} />}
+          {m.profile?.dob && <Row label="Date of birth" value={`${fmtDate(m.profile.dob)}${age(m.profile.dob) ? ` (${age(m.profile.dob)} yrs)` : ''}`} />}
+          {m.profile?.bloodGroup && <Row label="Blood group" value={m.profile.bloodGroup} />}
+          {(m.profile?.height || m.profile?.weight) && (
+            <Row label="Height / Weight" value={`${m.profile?.height ? `${m.profile.height} cm` : '—'} · ${m.profile?.weight ? `${m.profile.weight} kg` : '—'}`} />
+          )}
+          {m.profile?.goal && <Row label="Goal" value={m.profile.goal} />}
+          {m.profile?.address && <Row label="Address" value={m.profile.address} />}
+          {(m.profile?.emergencyName || m.profile?.emergencyPhone) && (
+            <Row label="Emergency" value={[m.profile?.emergencyName, m.profile?.emergencyPhone].filter(Boolean).join(' · ')} />
+          )}
+          <Row label="Registered via" value={REGISTERED_VIA[m.profile?.registeredVia || 'counter']} />
         </div>
 
         <div className="grid grid-cols-2 gap-3">
