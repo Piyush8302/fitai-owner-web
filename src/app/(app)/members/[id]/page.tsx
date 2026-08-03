@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState, Suspense } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
-import { ArrowLeft, CheckCircle2, IndianRupee, CalendarClock, Trash2, Phone, Camera, Pencil } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, IndianRupee, CalendarClock, Trash2, Phone, Camera } from 'lucide-react';
 import { api, can, fmtDate, fmtMoney, fmtTime, PLAN_LABEL, type MemberRow } from '@/lib/api';
 import { useApp } from '@/lib/store';
 import { Avatar, Modal, Loading, StatusBadge, DueBadge, Toast, Empty } from '@/components/ui';
@@ -20,23 +20,6 @@ type Detail = {
 
 const MEMBER_STATUSES = ['active', 'inactive', 'blocked', 'left'] as const;
 
-const GENDER_LABEL: Record<string, string> = { male: 'Male', female: 'Female', other: 'Other' };
-const REGISTERED_VIA: Record<string, string> = {
-  app_scan: 'Scanned the gym QR (app)',
-  web: 'Web check-in page',
-  counter: 'Added at the counter',
-};
-const age = (dob?: string | null) => {
-  if (!dob) return null;
-  const d = new Date(dob);
-  if (isNaN(d.getTime())) return null;
-  const now = new Date();
-  let a = now.getFullYear() - d.getFullYear();
-  const mth = now.getMonth() - d.getMonth();
-  if (mth < 0 || (mth === 0 && now.getDate() < d.getDate())) a--;
-  return a >= 0 && a < 120 ? a : null;
-};
-
 function MemberDetailInner() {
   const { id } = useParams<{ id: string }>();
   const sp = useSearchParams();
@@ -50,7 +33,6 @@ function MemberDetailInner() {
   const [dueOpen, setDueOpen] = useState(false);
   const [statusOpen, setStatusOpen] = useState(false);
   const [photoOpen, setPhotoOpen] = useState(false);
-  const [profileOpen, setProfileOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [toast, setToast] = useState<{ msg: string; error?: boolean }>({ msg: '' });
 
@@ -142,37 +124,12 @@ function MemberDetailInner() {
         </div>
 
         <div className="card space-y-2 p-4 text-sm">
+          <Row label="Email" value={m.user.email || m.profile?.email || '—'} />
           <Row label="Gym" value={gym?.name || '—'} />
           <Row label="Plan" value={`${PLAN_LABEL[m.plan] || m.plan} · ${fmtMoney(m.fee)}`} />
           <Row label="Joined" value={fmtDate(m.joinDate)} />
           <Row label="Last Paid" value={fmtDate(m.lastPaidDate)} />
           <Row label="Next Due" value={fmtDate(m.dueDate)} strong={m.isDue} />
-        </div>
-
-        {/* Registration details — the member only gives name/email/phone/photo at
-            sign-up in the app; owner/staff fill in the rest whenever they have it. */}
-        <div className="card space-y-2 p-4 text-sm">
-          <div className="flex items-center justify-between">
-            <p className="text-[11px] font-bold uppercase tracking-wide text-muted">Registration details</p>
-            {can(user, 'canAddMember') && (
-              <button className="flex items-center gap-1 text-xs font-bold text-primary" onClick={() => setProfileOpen(true)}>
-                <Pencil size={12} /> Edit
-              </button>
-            )}
-          </div>
-          <Row label="Email" value={m.user.email || m.profile?.email || '—'} />
-          {m.profile?.gender && <Row label="Gender" value={GENDER_LABEL[m.profile.gender] || m.profile.gender} />}
-          {m.profile?.dob && <Row label="Date of birth" value={`${fmtDate(m.profile.dob)}${age(m.profile.dob) ? ` (${age(m.profile.dob)} yrs)` : ''}`} />}
-          {m.profile?.bloodGroup && <Row label="Blood group" value={m.profile.bloodGroup} />}
-          {(m.profile?.height || m.profile?.weight) && (
-            <Row label="Height / Weight" value={`${m.profile?.height ? `${m.profile.height} cm` : '—'} · ${m.profile?.weight ? `${m.profile.weight} kg` : '—'}`} />
-          )}
-          {m.profile?.goal && <Row label="Goal" value={m.profile.goal} />}
-          {m.profile?.address && <Row label="Address" value={m.profile.address} />}
-          {(m.profile?.emergencyName || m.profile?.emergencyPhone) && (
-            <Row label="Emergency" value={[m.profile?.emergencyName, m.profile?.emergencyPhone].filter(Boolean).join(' · ')} />
-          )}
-          <Row label="Registered via" value={REGISTERED_VIA[m.profile?.registeredVia || 'counter']} />
         </div>
 
         <div className="grid grid-cols-2 gap-3">
@@ -304,19 +261,6 @@ function MemberDetailInner() {
         />
       </Modal>
 
-      <Modal open={profileOpen} onClose={() => setProfileOpen(false)} title="Registration Details">
-        <ProfileEditForm
-          membershipId={m._id}
-          profile={m.profile}
-          onDone={(msg) => {
-            setProfileOpen(false);
-            show(msg, false);
-            load();
-          }}
-          onError={show}
-        />
-      </Modal>
-
       <Toast msg={toast.msg} error={toast.error} />
     </div>
   );
@@ -352,112 +296,6 @@ function PhotoUpdateForm({
         }}
       >
         {busy ? 'Uploading…' : 'Save Photo'}
-      </button>
-    </div>
-  );
-}
-
-const GENDERS = ['male', 'female', 'other'] as const;
-const GOALS = ['Weight loss', 'Muscle gain', 'General fitness', 'Strength', 'Stamina'];
-
-function ProfileEditForm({
-  membershipId,
-  profile,
-  onDone,
-  onError,
-}: {
-  membershipId: string;
-  profile?: MemberRow['profile'];
-  onDone: (msg: string) => void;
-  onError: (msg: string) => void;
-}) {
-  const p = profile || {};
-  const [gender, setGender] = useState(p.gender || '');
-  const [dob, setDob] = useState(p.dob ? new Date(p.dob).toISOString().slice(0, 10) : '');
-  const [height, setHeight] = useState(p.height ? String(p.height) : '');
-  const [weight, setWeight] = useState(p.weight ? String(p.weight) : '');
-  const [goal, setGoal] = useState(p.goal || '');
-  const [address, setAddress] = useState(p.address || '');
-  const [emergencyName, setEmergencyName] = useState(p.emergencyName || '');
-  const [emergencyPhone, setEmergencyPhone] = useState(p.emergencyPhone || '');
-  const [bloodGroup, setBloodGroup] = useState(p.bloodGroup || '');
-  const [busy, setBusy] = useState(false);
-
-  return (
-    <div className="space-y-3">
-      <div>
-        <p className="mb-1 text-xs font-semibold text-muted">Gender</p>
-        <div className="flex gap-2">
-          {GENDERS.map((g) => (
-            <button key={g} className={`chip flex-1 justify-center capitalize ${gender === g ? 'chip-active' : ''}`} onClick={() => setGender(gender === g ? '' : g)}>
-              {g}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      <div>
-        <p className="mb-1 text-xs font-semibold text-muted">Date of birth</p>
-        <input className="input" type="date" value={dob} onChange={(e) => setDob(e.target.value)} />
-      </div>
-
-      <div className="grid grid-cols-2 gap-3">
-        <div>
-          <p className="mb-1 text-xs font-semibold text-muted">Height (cm)</p>
-          <input className="input" type="number" value={height} onChange={(e) => setHeight(e.target.value)} placeholder="170" />
-        </div>
-        <div>
-          <p className="mb-1 text-xs font-semibold text-muted">Weight (kg)</p>
-          <input className="input" type="number" value={weight} onChange={(e) => setWeight(e.target.value)} placeholder="70" />
-        </div>
-      </div>
-
-      <div>
-        <p className="mb-1 text-xs font-semibold text-muted">Goal</p>
-        <div className="flex flex-wrap gap-2">
-          {GOALS.map((g) => (
-            <button key={g} className={`chip ${goal === g ? 'chip-active' : ''}`} onClick={() => setGoal(goal === g ? '' : g)}>
-              {g}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      <div>
-        <p className="mb-1 text-xs font-semibold text-muted">Address</p>
-        <textarea className="input" rows={2} value={address} onChange={(e) => setAddress(e.target.value)} placeholder="House, street, area" />
-      </div>
-
-      <div className="grid grid-cols-3 gap-3">
-        <div className="col-span-2">
-          <p className="mb-1 text-xs font-semibold text-muted">Emergency contact</p>
-          <input className="input" value={emergencyName} onChange={(e) => setEmergencyName(e.target.value)} placeholder="Name" />
-        </div>
-        <div>
-          <p className="mb-1 text-xs font-semibold text-muted">Blood group</p>
-          <input className="input" value={bloodGroup} onChange={(e) => setBloodGroup(e.target.value.toUpperCase())} placeholder="O+" />
-        </div>
-      </div>
-
-      <div>
-        <p className="mb-1 text-xs font-semibold text-muted">Emergency number</p>
-        <input className="input" value={emergencyPhone} onChange={(e) => setEmergencyPhone(e.target.value)} placeholder="10-digit number" maxLength={15} />
-      </div>
-
-      <button
-        className="btn"
-        disabled={busy}
-        onClick={async () => {
-          setBusy(true);
-          const res = await api.put(`/api/gym/member/${membershipId}/profile`, {
-            gender, dob: dob || undefined, height, weight, goal, address, emergencyName, emergencyPhone, bloodGroup,
-          });
-          setBusy(false);
-          if (!res.success) return onError(res.message || 'Could not save details');
-          onDone('Details updated ✅');
-        }}
-      >
-        {busy ? 'Saving…' : 'Save Details'}
       </button>
     </div>
   );
