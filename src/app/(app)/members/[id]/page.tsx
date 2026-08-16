@@ -124,6 +124,7 @@ function MemberDetailInner() {
         </div>
 
         <div className="card space-y-2 p-4 text-sm">
+          <Row label="Email" value={m.user.email || m.profile?.email || '—'} />
           <Row label="Gym" value={gym?.name || '—'} />
           <Row label="Plan" value={`${PLAN_LABEL[m.plan] || m.plan} · ${fmtMoney(m.fee)}`} />
           <Row label="Joined" value={fmtDate(m.joinDate)} />

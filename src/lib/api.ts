@@ -114,9 +114,28 @@ export type Gym = {
   isActive?: boolean;
 };
 
+// What the member gave THIS gym when they registered. Kept on the membership,
+// not on the user, so the gym's copy never overwrites the member's own profile.
+export type MemberProfile = {
+  email?: string;
+  gender?: 'male' | 'female' | 'other' | '';
+  dob?: string | null;
+  address?: string;
+  emergencyName?: string;
+  emergencyPhone?: string;
+  bloodGroup?: string;
+  goal?: string;
+  height?: number | null;
+  weight?: number | null;
+  registeredVia?: 'app_scan' | 'web' | 'counter';
+};
+
 export type MemberRow = {
   _id: string; // membershipId
-  user: { _id: string; name: string; phone?: string; email?: string; avatar?: string };
+  // `avatar` is the gym's photo when it has one, else the member's app photo;
+  // `gymPhoto` / `appAvatar` expose the two separately.
+  user: { _id: string; name: string; phone?: string; email?: string; avatar?: string; gymPhoto?: string; appAvatar?: string };
+  profile?: MemberProfile;
   gym?: { _id: string; name: string };
   plan: string;
   fee: number;
